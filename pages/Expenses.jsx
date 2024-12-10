@@ -7,11 +7,11 @@ import {
   ScrollView,
   Alert,
   Modal,
+  TouchableOpacity,
+  TextInput
 } from "react-native"
 import React, { useState } from "react"
 import Navbar from "../components/Navbar"
-import { TextInput } from "react-native"
-import { TouchableOpacity } from "react-native"
 import { FontAwesome5 } from "react-native-vector-icons"
 
 const Expenses = () => {
@@ -181,6 +181,7 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     fontSize: 16,
     backgroundColor: "white",
+    fontWeight: "bold"
   },
   addButton: {
     height: 46,
@@ -238,6 +239,7 @@ const styles = StyleSheet.create({
   },
   budgetText: {
     fontSize: 17,
+    fontWeight: "bold",
   },
   changeBudgetBtn: {
     position: "absolute",
@@ -262,6 +264,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "flex-end",
     fontSize: 26,
+    fontWeight: 'bold'
   },
   data: {
     width: "100%",
@@ -279,9 +282,12 @@ const styles = StyleSheet.create({
   sharedAboutHeaders: {
     textAlign: "center",
     fontSize: 18,
-    fontWeight: "condensedBold",
+    fontWeight: 'bold',
     height: 26,
     marginTop: 10,
+  },
+  sharedAboutData: {
+    fontWeight: 'bold',
   },
   modalContainer: {
     flex: 1,

@@ -32,11 +32,11 @@ const styles = StyleSheet.create({
   },
   pageName: {
     fontFamily: "Poppins-Regular",
-    fontSize: 22,
+    fontSize: 28,
     textAlign: "center",
     fontWeight: "600",
     color: "#000",
-    paddingTop: 15
+    paddingTop: 8,
   },
 })
 
