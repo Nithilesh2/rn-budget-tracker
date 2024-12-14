@@ -10,10 +10,14 @@ import {
 import React, { useState } from "react"
 import Navbar from "../components/Navbar"
 import DateTimePicker from "@react-native-community/datetimepicker"
+import Toast from "react-native-toast-message"
 
 const Track = () => {
   const [date, setDate] = useState(new Date())
   const [show, setShow] = useState(false)
+  const [spents, setSpents] = useState(500)
+  const [category, setCategory] = useState("")
+  const [amount, setAmount] = useState("")
 
   const onChange = (event, selectedDate) => {
     if (event.type === "set") {
@@ -27,6 +31,54 @@ const Track = () => {
     setShow(true)
   }
 
+  const searchBtnClicked = () => {
+    if (!category && !amount) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid Input",
+        text2: "Please fill in all fields before searching.",
+        topOffset: 10,
+        text1Style: {
+          fontSize: 16,
+        },
+        text2Style: {
+          fontSize: 14,
+          fontWeight: "bold",
+        },
+        swipeable: true
+      })
+      return
+    }
+    Toast.show({
+      type: "success",
+      text1: "Search Successful",
+      text2: `Category: ${category}, Amount: ${amount}`,
+      topOffset: 10,
+      text1Style: {
+        fontSize: 16,
+      },
+      text2Style: {
+        fontSize: 14,
+        fontWeight: "bold",
+      },
+    })
+  }
+
+  const clearFilters = () => {
+    setCategory("")
+    setAmount("")
+    setDate(new Date())
+    Toast.show({
+      type: "info",
+      text1: "Filters Cleared",
+      topOffset: 10,
+      text1Style: {
+        fontSize: 16,
+      },
+      swipeable: true
+    })
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Navbar pageName="Track" />
@@ -38,14 +90,21 @@ const Track = () => {
               style={styles.inputBox}
               selectionColor="green"
               keyboardType="default"
+              value={category}
+              onChangeText={(text) => setCategory(text)}
             />
             <TextInput
               placeholder="Amount"
               style={styles.inputBox}
               selectionColor="green"
-              keyboardType="number-pad"
+              keyboardType="numeric"
+              value={amount}
+              onChangeText={(text) => setAmount(text)}
             />
-            <TouchableOpacity style={styles.addButton}>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={searchBtnClicked}
+            >
               <Text style={styles.addBtn}>Search</Text>
             </TouchableOpacity>
           </View>
@@ -88,14 +147,28 @@ const Track = () => {
                   onChange={onChange}
                 />
               )}
-              <Text style={styles.pickedDate}>Picked Date: {date.toLocaleDateString('en-GB')}</Text>
+              <Text style={styles.pickedDate}>
+                Picked Date: {date.toLocaleDateString("en-GB")}
+              </Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.addButton}>
+          <TouchableOpacity style={styles.addButton} onPress={clearFilters}>
             <Text style={styles.addBtn}>Clear</Text>
           </TouchableOpacity>
+          <View style={styles.horizontalLine} />
+          <View style={styles.spentsBox}>
+            <Text style={styles.spentsText}>Spents: ₹{spents}</Text>
+          </View>
+          <Text style={styles.myExpenses}>My Expenses</Text>
+          <View style={styles.horizontalLine} />
+          <View style={styles.aboutHeader}>
+            <Text style={styles.sharedAboutHeaders}>Category</Text>
+            <Text style={styles.sharedAboutHeaders}>Amount</Text>
+            <Text style={styles.sharedAboutHeaders}>Created Date</Text>
+          </View>
         </View>
       </ScrollView>
+      <Toast />
     </SafeAreaView>
   )
 }
@@ -203,7 +276,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 20,
     marginLeft: 10,
-    marginBottom: 20
+    marginBottom: 20,
   },
   dateText: {
     fontSize: 16,
@@ -219,7 +292,47 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 20,
     marginLeft: 10,
-  }
+  },
+  horizontalLine: {
+    height: 2,
+    width: "93%",
+    backgroundColor: "black",
+    alignSelf: "center",
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  spentsBox: {
+    height: 50,
+    width: "90%",
+    backgroundColor: "#d4d4d4",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  spentsText: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  myExpenses: {
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: "-15",
+  },
+  aboutHeader: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    width: "100%",
+  },
+  sharedAboutHeaders: {
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "bold",
+    height: 26,
+    marginTop: 10,
+  },
 })
 
 export default Track
