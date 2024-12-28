@@ -8,6 +8,7 @@ import Expenses from "./../pages/Expenses"
 import Track from "./../pages/Track"
 import Login from "../pages/Login"
 import Icon from "react-native-vector-icons/Ionicons"
+import Profile from "../pages/Profile";
 
 const Stack = createNativeStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -25,7 +26,7 @@ const TabNavigator = () => {
             iconName = focused ? "cash" : "cash-outline"
           } else if (route.name === "Track") {
             iconName = focused ? "list" : "list-outline"
-          } else if(route.name === "Login"){
+          } else if(route.name === "Profile"){
             iconName = focused ? "person" : "person-outline"
           }
           return <Icon name={iconName} size={size} color={color} />
@@ -42,7 +43,7 @@ const TabNavigator = () => {
       <Tab.Screen name="Dashboard" component={Dashboard} />
       <Tab.Screen name="Expenses" component={Expenses} />
       <Tab.Screen name="Track" component={Track} />
-      <Tab.Screen name="Login" component={Login} />
+      <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>
   )
 }
