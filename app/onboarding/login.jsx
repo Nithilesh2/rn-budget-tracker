@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Image,
   StyleSheet,
   Text,
@@ -22,11 +23,19 @@ const login = () => {
   const [showPassword, setShowPassword] = useState(false)
 
   const router = useRouter()
-  useFonts({
+  const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_500Medium,
     Poppins_600SemiBold,
   })
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#7F3DFF" />
+      </View>
+    )
+  }
 
   const handleLogin = async () => {
     try {
@@ -110,6 +119,11 @@ const login = () => {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
@@ -124,6 +138,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: "Poppins_400Regular",
     color: "#7F3DFF",
+    width: "100%",
+    textAlign: "center",
   },
   bottomContainerTop: {
     marginVertical: 30,
@@ -178,15 +194,21 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 18,
     fontFamily: "Poppins_600SemiBold",
+    width: "100%",
+    textAlign: "center",
   },
   or: {
     alignItems: "center",
     marginVertical: 7,
+    width: "100%",
+    paddingHorizontal: 10,
   },
   orText: {
     color: "grey",
     fontSize: 16,
     fontFamily: "Poppins_500Medium",
+    width: "100%",
+    textAlign: "center",
   },
   socialContainer: {
     flexDirection: "row",
@@ -206,12 +228,16 @@ const styles = StyleSheet.create({
   googleImage: {
     width: 26,
     height: 26,
+    textAlign: "center",
   },
   socialText: {
     color: "black",
     fontSize: 16,
     marginLeft: 10,
     fontFamily: "Poppins_500Medium",
+    width: "70%",
+    textAlign: "center",
+    overflow: 'visible'
   },
   alreadyHaveAcc: {
     flexDirection: "row",
@@ -222,12 +248,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 5,
     fontFamily: "Poppins_400Regular",
+    textAlign: "center",
+    overflow: 'visible'
   },
   signInText: {
     color: "#7F3DFF",
     fontSize: 16,
     marginLeft: 5,
     fontFamily: "Poppins_500Medium",
+    width: "100%",
+    textAlign: "flex-start",
+    overflow: 'visible'
   },
 })
 export default login

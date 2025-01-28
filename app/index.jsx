@@ -54,6 +54,8 @@ const styles = StyleSheet.create({
     color: "#7F3DFF",
     fontSize: 44,
     fontFamily: "Ubuntu_400Regular",
+    width: '100%',
+    textAlign: "center",
   },
   textBottom: {
     color: "#7F3DFF",
@@ -61,6 +63,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 20,
     fontFamily: "Poppins_400Regular",
+    width: '100%'
   },
 })
 

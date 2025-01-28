@@ -55,7 +55,7 @@ const _layout = () => {
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="index" />
       </Stack>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="#7F3DFF" />
     </>
   )
 }

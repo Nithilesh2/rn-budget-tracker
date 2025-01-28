@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Image,
   StyleSheet,
   Text,
@@ -21,12 +22,19 @@ const register = () => {
   const [showPassword, setShowPassword] = useState(false)
 
   const router = useRouter()
-  useFonts({
+  const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_500Medium,
     Poppins_600SemiBold,
   })
 
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#7F3DFF" />
+      </View>
+    )
+  }
   return (
     <>
       <View style={styles.container}>
@@ -94,6 +102,11 @@ const register = () => {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
@@ -150,14 +163,19 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 18,
     fontFamily: "Poppins_600SemiBold",
+    width: "100%",
+    textAlign: "center",
   },
   or: {
     alignItems: "center",
     marginVertical: 7,
+    width: "100%",
   },
   orText: {
     color: "grey",
     fontSize: 16,
+    width: "100%",
+    textAlign: "center",
     fontFamily: "Poppins_500Medium",
   },
   socialContainer: {
@@ -178,28 +196,36 @@ const styles = StyleSheet.create({
   googleImage: {
     width: 26,
     height: 26,
+    textAlign: "center",
   },
   socialText: {
     color: "black",
     fontSize: 16,
     marginLeft: 10,
     fontFamily: "Poppins_500Medium",
+    width: "70%",
+    textAlign: "center",
   },
   alreadyHaveAcc: {
     flexDirection: "row",
     justifyContent: "center",
+    width: "100%",
   },
   alreadyHaveAccText: {
     color: "grey",
     fontSize: 16,
     marginLeft: 5,
     fontFamily: "Poppins_400Regular",
+    textAlign: "center",
   },
   signInText: {
     color: "#7F3DFF",
     fontSize: 16,
     marginLeft: 5,
     fontFamily: "Poppins_500Medium",
+    width: "100%",
+    textAlign: "flex-start",
+    overflow: 'visible'
   },
 })
 
