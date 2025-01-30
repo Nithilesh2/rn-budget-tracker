@@ -38,7 +38,7 @@ const _layout = () => {
         name="index"
         options={{
           tabBarIcon: ({ focused, onPress }) => (
-            <View style={{ alignItems: "center", paddingTop: 15, width: 120 }}>
+            <View style={{ alignItems: "center", paddingTop: 15, width: 70 }}>
               <HomeIcon
                 color={focused ? "#7F3DFF" : "grey"}
                 height="30"
@@ -49,6 +49,8 @@ const _layout = () => {
                   color: focused ? "#7F3DFF" : "grey",
                   fontSize: 12,
                   fontFamily: "Poppins_600SemiBold",
+                  width: 60,
+                  textAlign: "center",
                 }}
               >
                 Home
@@ -61,7 +63,7 @@ const _layout = () => {
         name="transactions"
         options={{
           tabBarIcon: ({ focused }) => (
-            <View style={{ alignItems: "center", paddingTop: 15, width: 120 }}>
+            <View style={{ alignItems: "center", paddingTop: 15, width: 70 }}>
               <TransactionIcon
                 color={focused ? "#7F3DFF" : "grey"}
                 height="30"
@@ -72,6 +74,8 @@ const _layout = () => {
                   color: focused ? "#7F3DFF" : "grey",
                   fontSize: 12,
                   fontFamily: "Poppins_600SemiBold",
+                  width: 60,
+                  textAlign: "center",
                 }}
               >
                 Spents
@@ -114,7 +118,7 @@ const _layout = () => {
         options={{
           tabBarIcon: ({ focused }) => (
             <View
-              style={{ alignItems: "center", paddingTop: 15, width: "120" }}
+              style={{ alignItems: "center", paddingTop: 15, width: 70 }}
             >
               <BudgetIcon
                 color={focused ? "#7F3DFF" : "grey"}
@@ -126,6 +130,8 @@ const _layout = () => {
                   color: focused ? "#7F3DFF" : "grey",
                   fontSize: 12,
                   fontFamily: "Poppins_600SemiBold",
+                  width: 60,
+                  textAlign: "center",
                 }}
               >
                 Budget
@@ -138,7 +144,7 @@ const _layout = () => {
         name="profile"
         options={{
           tabBarIcon: ({ focused }) => (
-            <View style={{ alignItems: "center", paddingTop: 15, width: 120 }}>
+            <View style={{ alignItems: "center", paddingTop: 15, width: 70 }}>
               <ProfileIcon
                 color={focused ? "#7F3DFF" : "grey"}
                 height="30"
@@ -149,6 +155,8 @@ const _layout = () => {
                   color: focused ? "#7F3DFF" : "grey",
                   fontSize: 12,
                   fontFamily: "Poppins_600SemiBold",
+                  width: 60,
+                  textAlign: "center",
                 }}
               >
                 Profile
