@@ -23,6 +23,7 @@ import ShoppingBagIcon from "./../../../assets/icons/Shopping"
 import FoodIcon from "./../../../assets/icons/Food"
 import CarIcon from "./../../../assets/icons/Transport"
 import SubscriptionIcon from "./../../../assets/icons/Subscription"
+import { useRouter } from "expo-router";
 
 const index = () => {
   const transactions = [
@@ -64,6 +65,7 @@ const index = () => {
     },
   ]
 
+  const router = useRouter()
   const date = new Date()
   const options = { month: "long" }
   const monthName = new Intl.DateTimeFormat("en-US", options).format(date)
@@ -99,6 +101,7 @@ const index = () => {
                 width="30"
                 color="#7F3DFF"
                 fill="#7F3DFF"
+                onPress={() => router.push('/onboarding/tabs/notification')}
               />
             </View>
           </View>

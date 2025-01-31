@@ -23,7 +23,7 @@ import { useRouter } from "expo-router"
 const AddExpenses = () => {
   const [selectedType, setSelectedType] = useState("Expense")
   const [selected, setSelected] = useState("")
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState("")
 
   const bgColorAnim = useRef(new Animated.Value(0)).current
 
@@ -144,12 +144,7 @@ const AddExpenses = () => {
                 if (numericValue === "") {
                   setAmount("")
                 } else {
-                  let num = parseInt(numericValue, 10)
-                  if (num > 1000000) {
-                    setAmount("1000000") 
-                  } else {
-                    setAmount(numericValue)
-                  }
+                  setAmount(numericValue)
                 }
               }}
             />
@@ -214,12 +209,10 @@ const styles = StyleSheet.create({
     color: "white",
   },
   expenseActiveButton: {
-    backgroundColor: "rgb(253, 60, 74)",
     borderWidth: 2,
     borderColor: "white",
   },
   incomeActiveButton: {
-    backgroundColor: "rgb(0, 168, 107)",
     borderWidth: 2,
     borderColor: "white",
   },

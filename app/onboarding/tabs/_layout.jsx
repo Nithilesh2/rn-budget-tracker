@@ -7,7 +7,10 @@ import AddIcon from "../../../assets/icons/Add"
 import BudgetIcon from "../../../assets/icons/Budget"
 import ProfileIcon from "../../../assets/icons/Profile"
 import { useFonts } from "expo-font"
-import { Poppins_500Medium, Poppins_600SemiBold } from "@expo-google-fonts/poppins"
+import {
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+} from "@expo-google-fonts/poppins"
 
 const _layout = () => {
   useFonts({
@@ -117,9 +120,7 @@ const _layout = () => {
         name="budget"
         options={{
           tabBarIcon: ({ focused }) => (
-            <View
-              style={{ alignItems: "center", paddingTop: 15, width: 70 }}
-            >
+            <View style={{ alignItems: "center", paddingTop: 15, width: 70 }}>
               <BudgetIcon
                 color={focused ? "#7F3DFF" : "grey"}
                 height="30"
@@ -163,6 +164,12 @@ const _layout = () => {
               </Text>
             </View>
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="notification"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
