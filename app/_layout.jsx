@@ -1,7 +1,8 @@
 import { StatusBar } from "react-native"
 import React, { useEffect, useState } from "react"
 import { Stack, useRouter } from "expo-router"
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import { RootSiblingParent } from 'react-native-root-siblings';
 
 const _layout = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -47,15 +48,17 @@ const _layout = () => {
   if (loading) return null
   return (
     <>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="onboarding" />
-        <Stack.Screen name="index" />
-      </Stack>
-      <StatusBar barStyle="light-content" backgroundColor="#7F3DFF" />
+      <RootSiblingParent>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="index" />
+        </Stack>
+        <StatusBar barStyle="light-content" backgroundColor="#7F3DFF" />
+      </RootSiblingParent>
     </>
   )
 }

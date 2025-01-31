@@ -20,6 +20,7 @@ import { SelectList } from "react-native-dropdown-select-list"
 import { DateTimePickerModal } from "react-native-modal-datetime-picker"
 import moment from "moment"
 import DownloadIcon from "./../../../../assets/icons/Download"
+import Toast from "react-native-root-toast"
 
 const ExportBox = () => {
   const router = useRouter()
@@ -36,13 +37,29 @@ const ExportBox = () => {
   const [isStartDateVisible, setIsStartDateVisible] = useState(false)
   const [isEndDateVisible, setIsEndDateVisible] = useState(false)
 
+  const options = {
+    duration: Toast.durations.LONG,
+    position: Toast.positions.TOP,
+    shadow: true,
+    animation: true,
+    hideOnPress: true,
+    hideOnPress: true,
+    delay: 0,
+  }
   const handleExportData = () => {
     if (selectedExportType && selectedFormat && startDate && endDate) {
-      console.log(
-        `Exporting ${selectedExportType} data as ${selectedFormat} from ${startDate} to ${endDate}...`
-      )
+      const exportType = exportOptions.find(
+        (option) => option.key === selectedExportType
+      )?.value
+      const formatType = formatOptions.find(
+        (option) => option.key === selectedFormat
+      )?.value
+
+      if (exportType && formatType) {
+        Toast.show(`Exported ${exportType} as ${formatType}`, options)
+      }
     } else {
-      console.log("Please select data type, format, and date range.")
+      Toast.show("Please select data type, format, and date range.", options)
     }
   }
 
@@ -263,11 +280,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginTop: 40,
     width: "100%",
-    flexDirection: 'row',
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,
-    gap: 20
+    gap: 20,
   },
   exportButtonText: {
     fontFamily: "Poppins_500Medium",

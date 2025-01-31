@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   Image,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -8,8 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native"
-import React from "react"
-import ProfileIcon from "./../../../assets/icons/Profile"
+import React, { useCallback, useEffect, useState } from "react"
 import ArrowDownIcon from "./../../../assets/icons/ArrowDown"
 import NotificationIcon from "./../../../assets/icons/Bell"
 import {
@@ -23,7 +23,9 @@ import ShoppingBagIcon from "./../../../assets/icons/Shopping"
 import FoodIcon from "./../../../assets/icons/Food"
 import CarIcon from "./../../../assets/icons/Transport"
 import SubscriptionIcon from "./../../../assets/icons/Subscription"
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router"
+import icons from "../../../components/Icons"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
 const index = () => {
   const transactions = [
@@ -64,6 +66,8 @@ const index = () => {
       time: "5:00 PM",
     },
   ]
+  const [selectedIcon, setSelectedIcon] = useState(1)
+  const [refreshing, setRefreshing] = useState(false)
 
   const router = useRouter()
   const date = new Date()
@@ -83,13 +87,39 @@ const index = () => {
     )
   }
 
+  useFocusEffect(
+    useCallback(() => {
+      const loadIcon = async () => {
+        try {
+          const storedIcon = await AsyncStorage.getItem("selectedIcon")
+          if (storedIcon) {
+            setSelectedIcon(storedIcon)
+          }
+        } catch (error) {
+          console.log(error)
+        }
+      }
+      loadIcon()
+    }, [])
+  )
+
+  const handleRefreshing = () => {
+    setRefreshing(true)
+    setTimeout(() => {
+      setRefreshing(false)
+    }, 4000)
+  }
+
   return (
     <>
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl onRefresh={handleRefreshing} refreshing={refreshing}/>}
+        >
           <View style={styles.top}>
             <View style={styles.topLeft}>
-              <ProfileIcon width="32" height="32" color="black" />
+              <Image source={icons[selectedIcon]} style={styles.userImg} />
             </View>
             <View style={styles.topMiddle}>
               <ArrowDownIcon height="26" width="26" color="black" />
@@ -101,7 +131,7 @@ const index = () => {
                 width="30"
                 color="#7F3DFF"
                 fill="#7F3DFF"
-                onPress={() => router.push('/onboarding/tabs/notification')}
+                onPress={() => router.push("/onboarding/tabs/notification")}
               />
             </View>
           </View>
@@ -204,6 +234,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
     paddingHorizontal: 10,
+  },
+  topLeft: {
+    width: "auto",
+    aspectRatio: 1,
+    borderRadius: 6,
+    overflow: "hidden",
+  },
+  userImg: {
+    width: 50,
+    height: 50,
+    borderRadius: 40,
   },
   topMiddle: {
     flexDirection: "row",

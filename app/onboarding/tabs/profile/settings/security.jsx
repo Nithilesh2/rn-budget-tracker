@@ -16,6 +16,7 @@ import {
 } from "@expo-google-fonts/poppins"
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import ArrowLeftIcon from "../../../../../assets/icons/ArrowLeft"
+import Toast from "react-native-root-toast"
 
 const Security = () => {
   const router = useRouter()
@@ -32,7 +33,7 @@ const Security = () => {
       try {
         const storedOption = await AsyncStorage.getItem("selectedSecurity")
         if (storedOption) {
-          setSelectedOption(storedOption) 
+          setSelectedOption(storedOption)
         }
       } catch (error) {
         console.log("Error loading security option:", error)
@@ -49,7 +50,7 @@ const Security = () => {
 
     try {
       await AsyncStorage.setItem("selectedSecurity", option)
-      setSelectedOption(option) 
+      setSelectedOption(option)
     } catch (error) {
       console.log("Error saving security option:", error)
     }
@@ -62,6 +63,19 @@ const Security = () => {
       </View>
     )
   }
+  const options = {
+    duration: Toast.durations.LONG,
+    position: Toast.positions.TOP,
+    shadow: true,
+    animation: true,
+    hideOnPress: true,
+    hideOnPress: true,
+    delay: 0,
+  }
+  const handleBack = () => {
+    Toast.show(`Security changed to ${selectedOption}`, options)
+    router.back()
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -71,7 +85,7 @@ const Security = () => {
           width={30}
           color="black"
           strokeWidth={2}
-          onPress={() => router.back()}
+          onPress={handleBack}
         />
         <Text style={styles.title}>Security</Text>
       </View>

@@ -17,6 +17,7 @@ import {
 } from "@expo-google-fonts/poppins"
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import ArrowLeftIcon from "../../../../../assets/icons/ArrowLeft"
+import Toast from "react-native-root-toast"
 
 const currency = () => {
   const router = useRouter()
@@ -27,11 +28,11 @@ const currency = () => {
   })
 
   const currencies = {
-    IN: "INR", 
-    US: "USD", 
-    KR: "KRW", 
-    RU: "RUB", 
-    SA: "SAR", 
+    IN: "INR",
+    US: "USD",
+    KR: "KRW",
+    RU: "RUB",
+    SA: "SAR",
   }
 
   const defaultCurrency = currencies[Localization.region] || "INR"
@@ -57,13 +58,26 @@ const currency = () => {
       console.log("Error saving currency:", error)
     }
   }
-
+  const options = {
+    duration: Toast.durations.LONG,
+    position: Toast.positions.TOP,
+    shadow: true,
+    animation: true,
+    hideOnPress: true,
+    hideOnPress: true,
+    delay: 0,
+  }
   if (!fontsLoaded) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#7F3DFF" />
       </View>
     )
+  }
+
+  const handleBack = () => {
+    Toast.show(`Currency changed to ${selectedCurrency}`, options)
+    router.back()
   }
 
   return (
@@ -74,7 +88,7 @@ const currency = () => {
           width={30}
           color="black"
           strokeWidth={2}
-          onPress={() => router.back()}
+          onPress={handleBack}
         />
         <Text style={styles.title}>Currency</Text>
       </View>

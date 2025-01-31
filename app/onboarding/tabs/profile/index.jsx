@@ -8,8 +8,8 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native"
-import React, { useState } from "react"
-import { useRouter } from "expo-router"
+import React, { useCallback, useEffect, useState } from "react"
+import { useFocusEffect, useRouter } from "expo-router"
 import { SafeAreaView } from "react-native"
 import { useFonts } from "expo-font"
 import {
@@ -18,15 +18,16 @@ import {
   Poppins_600SemiBold,
 } from "@expo-google-fonts/poppins"
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
-import ProfileIcon from "../../../../assets/icons/Profile"
 import AccountIcon from "./../../../../assets/icons/Account"
 import SettingsIcon from "./../../../../assets/icons/Settings"
 import ExportIcon from "./../../../../assets/icons/Export"
 import LogoutIcon from "./../../../../assets/icons/Logout"
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import icons from "../../../../components/Icons"
 
 const index = () => {
   const [showLogout, setShowLogout] = useState(false)
+  const [selectedIcon, setSelectedIcon] = useState(1)
   const router = useRouter()
   const handleLogout = async () => {
     setShowLogout(true)
@@ -51,6 +52,22 @@ const index = () => {
     )
   }
 
+  useFocusEffect(
+    useCallback(() => {
+      const loadIcon = async () => {
+        try {
+          const storedIcon = await AsyncStorage.getItem('selectedIcon')
+          if(storedIcon){
+            setSelectedIcon(storedIcon);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+      loadIcon()
+    }, [])
+  )
+
   return (
     <>
       <SafeAreaView style={styles.container}>
@@ -64,7 +81,7 @@ const index = () => {
             <View style={styles.topLeftContainer}>
               <View style={styles.userIconContainer}>
                 <Image
-                  source={require("../../../../assets/userIcons/child.png")}
+                  source={icons[selectedIcon]}
                   style={styles.userImg}
                 />
               </View>

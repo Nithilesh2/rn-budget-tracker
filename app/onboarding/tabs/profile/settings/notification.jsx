@@ -15,6 +15,7 @@ import {
 } from "@expo-google-fonts/poppins"
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import ArrowLeftIcon from "../../../../../assets/icons/ArrowLeft"
+import Toast from "react-native-root-toast"
 
 const notification = () => {
   const [onExpenses, setOnExpenses] = useState(false)
@@ -33,6 +34,33 @@ const notification = () => {
       </View>
     )
   }
+  const options = {
+    duration: Toast.durations.LONG,
+    position: Toast.positions.TOP,
+    shadow: true,
+    animation: true,
+    hideOnPress: true,
+    hideOnPress: true,
+    delay: 0,
+  }
+  const handleExpensesToggle = (value) => {
+    setOnExpenses(value)
+    if (value) {
+      Toast.show("Expense Alert is turned ON", options)
+    } else {
+      Toast.show("Expense Alert is turned OFF", options)
+    }
+  }
+
+  const handleBudgetToggle = (value) => {
+    setOnBudget(value)
+    if (value) {
+      Toast.show("Budget notifications are turned ON", options)
+    } else {
+      Toast.show("Budget notifications are turned OFF", options)
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.top}>
@@ -56,7 +84,7 @@ const notification = () => {
           <View style={styles.right}>
             <Switch
               value={onExpenses}
-              onValueChange={() => setOnExpenses(!onExpenses)}
+              onValueChange={handleExpensesToggle}
               thumbColor={onExpenses ? "#7F3DFF" : "#C4C4C4"}
               trackColor={{ false: "#C4C4C4", true: "#7F3DFF" }}
               style={styles.switch}
@@ -73,7 +101,7 @@ const notification = () => {
           <View style={styles.right}>
             <Switch
               value={onBudget}
-              onValueChange={() => setOnBudget(!onBudget)}
+              onValueChange={handleBudgetToggle}
               thumbColor={onBudget ? "#7F3DFF" : "#C4C4C4"}
               trackColor={{ false: "#C4C4C4", true: "#7F3DFF" }}
               style={styles.switch}
@@ -144,6 +172,6 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   switch: {
-    transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }], // Enlarge the switch a bit
+    transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }],
   },
 })

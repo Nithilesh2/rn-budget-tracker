@@ -18,6 +18,7 @@ import {
   Poppins_600SemiBold,
 } from "@expo-google-fonts/poppins"
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import Toast from "react-native-root-toast"
 
 const login = () => {
   const [showPassword, setShowPassword] = useState(false)
@@ -36,10 +37,20 @@ const login = () => {
       </View>
     )
   }
+  const options = {
+      duration: Toast.durations.LONG,
+      position: Toast.positions.TOP,
+      shadow: true,
+      animation: true,
+      hideOnPress: true,
+      hideOnPress: true,
+      delay: 0,
+    }
 
   const handleLogin = async () => {
     try {
       await AsyncStorage.setItem("loggedIn", "true")
+      Toast.show('Logged in as Guest', options)
       router.push("onboarding/tabs")
     } catch (error) {
       console.error(error)
