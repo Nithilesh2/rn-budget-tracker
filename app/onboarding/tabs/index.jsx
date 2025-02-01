@@ -68,7 +68,6 @@ const index = () => {
   ]
   const [selectedIcon, setSelectedIcon] = useState(1)
   const [refreshing, setRefreshing] = useState(false)
-
   const router = useRouter()
   const date = new Date()
   const options = { month: "long" }
@@ -79,14 +78,6 @@ const index = () => {
     Ubuntu_500Medium,
   })
 
-  if (!fontsLoaded) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7F3DFF" />
-      </View>
-    )
-  }
-
   useFocusEffect(
     useCallback(() => {
       const loadIcon = async () => {
@@ -96,7 +87,7 @@ const index = () => {
             setSelectedIcon(storedIcon)
           }
         } catch (error) {
-          console.log(error)
+          console.log("Error loading icon:", error)
         }
       }
       loadIcon()
@@ -109,13 +100,24 @@ const index = () => {
       setRefreshing(false)
     }, 4000)
   }
-
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#7F3DFF" />
+      </View>
+    )
+  }
   return (
     <>
       <SafeAreaView style={styles.container}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl onRefresh={handleRefreshing} refreshing={refreshing}/>}
+          refreshControl={
+            <RefreshControl
+              onRefresh={handleRefreshing}
+              refreshing={refreshing}
+            />
+          }
         >
           <View style={styles.top}>
             <View style={styles.topLeft}>
@@ -172,6 +174,7 @@ const index = () => {
             <TouchableOpacity
               activeOpacity={0.9}
               style={styles.recentTransicitionsButton}
+              onPress={() => router.push('/onboarding/tabs/transactions')}
             >
               <Text style={styles.recentTransicitionsButtonText}>See All</Text>
             </TouchableOpacity>
