@@ -17,9 +17,17 @@ import {
   Poppins_500Medium,
   Poppins_600SemiBold,
 } from "@expo-google-fonts/poppins"
+import { auth, firestore, provider } from "../../firebase/firebaseConfig"
+import Toast from "react-native-root-toast"
+import { createUserWithEmailAndPassword } from "firebase/auth"
+import { doc, setDoc } from "firebase/firestore"
 
-const register = () => {
+const Register = () => {
   const [showPassword, setShowPassword] = useState(false)
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const router = useRouter()
   const [fontsLoaded] = useFonts({
@@ -35,6 +43,64 @@ const register = () => {
       </View>
     )
   }
+
+  const options = {
+    duration: Toast.durations.LONG,
+    position: Toast.positions.TOP,
+    animation: true,
+    backgroundColor: "black",
+    textColor: "white",
+    shadow: true,
+    shadowColor: "white",
+    containerStyle: {
+      borderRadius: 15,
+      padding: 15,
+    },
+    textStyle: {
+      fontSize: 16,
+      fontWeight: "600",
+    },
+  }
+
+  const handleSignUp = () => {
+    const trimmedName = name.trim()
+    const trimmedEmail = email.trim()
+    const trimmedPassword = password.trim()
+
+    if (!trimmedName || !trimmedEmail || !trimmedPassword) {
+      Toast.show("Please fill in all the fields", options)
+    } else if (trimmedPassword.length < 7) {
+      Toast.show("Password must be at least 6 characters", options)
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/
+
+    if (!emailRegex.test(trimmedEmail)) {
+      Toast.show("Please enter a valid email address", options)
+      return
+    }
+    setLoading(true)
+    createUserWithEmailAndPassword(auth, trimmedEmail, trimmedPassword).then(
+      async (userCredentials) => {
+        const user = userCredentials.user
+        try {
+          await setDoc(doc(firestore, "users", user.uid), {
+            name: trimmedName,
+            email: trimmedEmail,
+            uid: user.uid,
+          })
+          Toast.show("User registered successfully", options)
+          router.push("/onboarding/login")
+          setLoading(false)
+        } catch (error) {
+          Toast.show("Error saving user data to Firestore", options)
+        } finally {
+          setLoading(false)
+        }
+      }
+    )
+  }
+
   return (
     <>
       <View style={styles.container}>
@@ -44,17 +110,20 @@ const register = () => {
             style={styles.inputText}
             placeholder="Name"
             keyboardType="default"
+            onChangeText={(text) => setName(text)}
           />
           <TextInput
             style={styles.inputText}
             placeholder="Email"
             keyboardType="email-address"
+            onChangeText={(text) => setEmail(text)}
           />
           <View style={styles.inputPassBox}>
             <TextInput
               style={styles.inputText}
               placeholder="Password"
               secureTextEntry={showPassword ? false : true}
+              onChangeText={(text) => setPassword(text)}
             />
             <TouchableOpacity
               activeOpacity={0.9}
@@ -68,8 +137,18 @@ const register = () => {
               )}
             </TouchableOpacity>
           </View>
-          <TouchableOpacity activeOpacity={0.9} style={styles.button}>
-            <Text style={styles.buttonText}>Sign Up</Text>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={styles.button}
+            onPress={handleSignUp}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? (
+                <ActivityIndicator size="large" color="white" />
+              ) : (
+                "Sign Up"
+              )}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.or}>
@@ -225,8 +304,8 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_500Medium",
     width: "100%",
     textAlign: "flex-start",
-    overflow: 'visible'
+    overflow: "visible",
   },
 })
 
-export default register
+export default Register

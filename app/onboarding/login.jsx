@@ -19,9 +19,15 @@ import {
 } from "@expo-google-fonts/poppins"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import Toast from "react-native-root-toast"
+import { auth, firestore, provider } from "../../firebase/firebaseConfig"
+import { signInWithEmailAndPassword } from "firebase/auth"
+import { doc, getDoc } from "firebase/firestore"
 
 const login = () => {
   const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const router = useRouter()
   const [fontsLoaded] = useFonts({
@@ -38,23 +44,56 @@ const login = () => {
     )
   }
   const options = {
-      duration: Toast.durations.LONG,
-      position: Toast.positions.TOP,
-      shadow: true,
-      animation: true,
-      hideOnPress: true,
-      hideOnPress: true,
-      delay: 0,
-    }
+    duration: Toast.durations.LONG,
+    position: Toast.positions.TOP,
+    animation: true,
+    backgroundColor: "black",
+    textColor: "white",
+    shadow: true,
+    shadowColor: "white",
+    containerStyle: {
+      borderRadius: 15,
+      padding: 15,
+    },
+    textStyle: {
+      fontSize: 16,
+      fontWeight: "600",
+    },
+  }
 
   const handleLogin = async () => {
-    try {
-      await AsyncStorage.setItem("loggedIn", "true")
-      Toast.show('Logged in as Guest', options)
-      router.push("onboarding/tabs")
-    } catch (error) {
-      console.error(error)
+    const trimmedEmail = email.trim()
+    const trimmedPassword = password.trim()
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/
+
+    if (!emailRegex.test(trimmedEmail)) {
+      Toast.show("Please enter a valid email address", options)
+      return
     }
+    setLoading(true)
+    signInWithEmailAndPassword(auth, trimmedEmail, trimmedPassword)
+      .then(async (userCredentials) => {
+        const user = userCredentials.user
+        try {
+          const userDoc = await getDoc(doc(firestore, "users", user.uid))
+          if (userDoc.exists()) {
+            const userData = userDoc.data()
+            await AsyncStorage.setItem("loggedIn", "true")
+            await AsyncStorage.setItem("userName", userData.name)
+            await AsyncStorage.setItem("userEmail", userData.email)
+
+            Toast.show(`logged in as ${userData.name}`, options)
+            router.push("onboarding/tabs")
+          }
+        } catch (error) {
+          console.error(error)
+        } finally {
+          setLoading(false)
+        }
+      })
+      .catch((error) => {
+        Toast.show(error.message, options)
+      })
   }
 
   return (
@@ -66,12 +105,14 @@ const login = () => {
             style={styles.inputText}
             placeholder="Email"
             keyboardType="email-address"
+            onChangeText={(text) => setEmail(text)}
           />
           <View style={styles.inputPassBox}>
             <TextInput
               style={styles.inputText}
               placeholder="Password"
               secureTextEntry={showPassword ? false : true}
+              onChangeText={(text) => setPassword(text)}
             />
             <TouchableOpacity
               activeOpacity={0.9}
@@ -97,7 +138,13 @@ const login = () => {
             style={styles.button}
             onPress={handleLogin}
           >
-            <Text style={styles.buttonText}>Login</Text>
+            <Text style={styles.buttonText}>
+              {loading ? (
+                  <ActivityIndicator size="large" color="white" />
+              ) : (
+                "Login"
+              )}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.or}>
@@ -248,7 +295,7 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_500Medium",
     width: "70%",
     textAlign: "center",
-    overflow: 'visible'
+    overflow: "visible",
   },
   alreadyHaveAcc: {
     flexDirection: "row",
@@ -260,7 +307,7 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     fontFamily: "Poppins_400Regular",
     textAlign: "center",
-    overflow: 'visible'
+    overflow: "visible",
   },
   signInText: {
     color: "#7F3DFF",
@@ -269,7 +316,7 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_500Medium",
     width: "100%",
     textAlign: "flex-start",
-    overflow: 'visible'
+    overflow: "visible",
   },
 })
 export default login

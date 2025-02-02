@@ -28,6 +28,8 @@ import icons from "../../../../components/Icons"
 const index = () => {
   const [showLogout, setShowLogout] = useState(false)
   const [selectedIcon, setSelectedIcon] = useState(1)
+  const [userName, setUserName] = useState("")
+  const [userEmail, setUserEmail] = useState("")
   const router = useRouter()
   const handleLogout = async () => {
     setShowLogout(true)
@@ -57,8 +59,16 @@ const index = () => {
       const loadIcon = async () => {
         try {
           const storedIcon = await AsyncStorage.getItem('selectedIcon')
+          const storedName = await AsyncStorage.getItem('userName')
+          const storedEmail = await AsyncStorage.getItem('userEmail')
           if(storedIcon){
             setSelectedIcon(storedIcon);
+          }
+          if(storedName){
+            setUserName(storedName);
+          }
+          if(storedEmail){
+            setUserEmail(storedEmail);
           }
         } catch (error) {
           console.log(error);
@@ -86,8 +96,8 @@ const index = () => {
                 />
               </View>
               <View style={styles.userNameContainer}>
-                <Text style={styles.userNameText}>Shree Ram</Text>
-                <Text style={styles.userEmailText}>shree@example.com</Text>
+                <Text style={styles.userNameText}>{userName}</Text>
+                <Text style={styles.userEmailText}>{userEmail}</Text>
               </View>
             </View>
           </View>
