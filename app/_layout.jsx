@@ -37,7 +37,7 @@ const _layout = () => {
     if (loading) return
 
     if (isLoggedIn) {
-      router.replace("/onboarding/tabs/")
+      router.replace("/onboarding/pinSetup/")
     } else if (firstLaunch) {
       router.replace("/")
     } else {

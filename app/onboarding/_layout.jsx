@@ -13,6 +13,7 @@ const _layout = () => {
       <Stack.Screen name='login' />
       <Stack.Screen name='forgotPassword' />
       <Stack.Screen name='tabs' />
+      <Stack.Screen name='pinSetup' />
     </Stack>
   )
 }

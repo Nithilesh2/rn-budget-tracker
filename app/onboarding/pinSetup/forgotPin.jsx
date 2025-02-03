@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -8,8 +9,6 @@ import {
   View,
 } from "react-native"
 import React, { useEffect, useState } from "react"
-import EyeCloseIcon from "./../../assets/icons/EyeClose"
-import EyeOpenIcon from "./../../assets/icons/EyeOpen"
 import { useRouter } from "expo-router"
 import { useFonts } from "expo-font"
 import {
@@ -19,30 +18,27 @@ import {
 } from "@expo-google-fonts/poppins"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import Toast from "react-native-root-toast"
-import { auth, firestore } from "../../firebase/firebaseConfig"
+import { auth, firestore } from "../../../firebase/firebaseConfig"
 import { signInWithEmailAndPassword } from "firebase/auth"
-import { doc, getDoc } from "firebase/firestore"
+import { doc, getDoc, setDoc } from "firebase/firestore"
+import EyeCloseIcon from "./../../../assets/icons/EyeClose"
+import EyeOpenIcon from "./../../../assets/icons/EyeOpen"
 
-const login = () => {
+const forgotPin = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [pin, setPin] = useState("")
+  const [rePin, setRePin] = useState("")
 
   const router = useRouter()
-  const [fontsLoaded] = useFonts({
+
+  useFonts({
     Poppins_400Regular,
     Poppins_500Medium,
-    Poppins_600SemiBold,
   })
 
-  if (!fontsLoaded) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7F3DFF" />
-      </View>
-    )
-  }
   const options = {
     duration: Toast.durations.LONG,
     position: Toast.positions.TOP,
@@ -61,47 +57,46 @@ const login = () => {
     },
   }
 
-  const handleLogin = async () => {
-    const trimmedEmail = email.trim()
-    const trimmedPassword = password.trim()
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/
-
-    if (!emailRegex.test(trimmedEmail)) {
-      Toast.show("Please enter a valid email address", options)
+  const handleChangePin = async () => {
+    if (!email || !password || !pin || !rePin) {
+      Toast.show("Please fill all fields", options)
+      return
+    }
+    if (pin !== rePin) {
+      Toast.show("Pin and Re-Pin do not match", options)
       return
     }
     setLoading(true)
-    signInWithEmailAndPassword(auth, trimmedEmail, trimmedPassword)
-      .then(async (userCredentials) => {
-        const user = userCredentials.user
-        try {
-          const userDoc = await getDoc(doc(firestore, "users", user.uid))
-          if (userDoc.exists()) {
-            const userData = userDoc.data()
-            await AsyncStorage.setItem("loggedIn", "true")
-            await AsyncStorage.setItem("userId", userData.uid)
-            await AsyncStorage.setItem("userName", userData.name)
-            await AsyncStorage.setItem("userEmail", userData.email)
 
-            Toast.show(`logged in as ${userData.name}`, options)
-            router.push("onboarding/pinSetup")
-          }
-        } catch (error) {
-          console.error(error)
-        } finally {
-          setLoading(false)
-        }
-      })
-      .catch((error) => {
-        Toast.show(error.message, options)
-      })
+    try {
+      const usercredentials = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      )
+      const user = usercredentials.user
+      const userRef = doc(firestore, "users", user.uid)
+      const userDoc = await getDoc(userRef)
+      if (userDoc.exists()) {
+        await setDoc(userRef, { pin }, { merge: true })
+        await AsyncStorage.setItem("userPin", pin)
+        router.replace("/onboarding/pinSetup/")
+        Toast.show("Pin changed successfully!", options)
+      } else {
+        Toast.show("User not found in database!", options)
+      }
+    } catch (error) {
+      Toast.show(error.message, options)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <>
       <View style={styles.container}>
-        <Text style={styles.title}>Login</Text>
-        <View style={styles.bottomContainerTop}>
+        <Text style={styles.title}>Forgot PIN</Text>
+        <ScrollView style={styles.bottomContainerTop}>
           <TextInput
             style={styles.inputText}
             placeholder="Email"
@@ -134,48 +129,40 @@ const login = () => {
           >
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
+          <TextInput
+            style={styles.inputText}
+            placeholder="Set New PIN"
+            keyboardType="decimal-pad"
+            onChangeText={(text) => setPin(text)}
+            maxLength={4}
+          />
+          <TextInput
+            style={styles.inputText}
+            placeholder="Re-Enter New PIN"
+            keyboardType="decimal-pad"
+            onChangeText={(text) => setRePin(text)}
+            maxLength={4}
+          />
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.button}
-            onPress={handleLogin}
+            onPress={handleChangePin}
           >
             <Text style={styles.buttonText}>
               {loading ? (
-                  <ActivityIndicator size="large" color="white" />
+                <ActivityIndicator size="large" color="white" />
               ) : (
-                "Login"
+                "Change PIN"
               )}
             </Text>
           </TouchableOpacity>
-
-          <View style={styles.or}>
-            <Text style={styles.orText}>Or With</Text>
-          </View>
-          <View style={styles.socialContainer}>
-            <TouchableOpacity activeOpacity={0.9} style={styles.socialButton}>
-              <Image
-                source={require("./../../assets/images/google.png")}
-                style={styles.googleImage}
-              />
-              <Text style={styles.socialText}>Login with Google</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.alreadyHaveAcc}>
-            <Text style={styles.alreadyHaveAccText}>
-              Don't have an account?
-            </Text>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => router.push("onboarding/register")}
-            >
-              <Text style={styles.signInText}>Sign Up</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        </ScrollView>
       </View>
     </>
   )
 }
+
+export default forgotPin
 
 const styles = StyleSheet.create({
   loadingContainer: {
@@ -186,7 +173,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
-    paddingHorizontal: 20,
     paddingTop: 30,
   },
   title: {
@@ -199,12 +185,12 @@ const styles = StyleSheet.create({
     color: "#7F3DFF",
     width: "100%",
     textAlign: "center",
+    paddingHorizontal: 20,
   },
   bottomContainerTop: {
     marginVertical: 30,
     width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
+    paddingHorizontal: 20,
   },
   inputText: {
     height: 50,
@@ -256,68 +242,4 @@ const styles = StyleSheet.create({
     width: "100%",
     textAlign: "center",
   },
-  or: {
-    alignItems: "center",
-    marginVertical: 7,
-    width: "100%",
-    paddingHorizontal: 10,
-  },
-  orText: {
-    color: "grey",
-    fontSize: 16,
-    fontFamily: "Poppins_500Medium",
-    width: "100%",
-    textAlign: "center",
-  },
-  socialContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    width: "100%",
-  },
-  socialButton: {
-    backgroundColor: "#D3D3D3",
-    height: 50,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 10,
-    marginVertical: 20,
-    width: "100%",
-  },
-  googleImage: {
-    width: 26,
-    height: 26,
-    textAlign: "center",
-  },
-  socialText: {
-    color: "black",
-    fontSize: 16,
-    marginLeft: 10,
-    fontFamily: "Poppins_500Medium",
-    width: "70%",
-    textAlign: "center",
-    overflow: "visible",
-  },
-  alreadyHaveAcc: {
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  alreadyHaveAccText: {
-    color: "grey",
-    fontSize: 16,
-    marginLeft: 5,
-    fontFamily: "Poppins_400Regular",
-    textAlign: "center",
-    overflow: "visible",
-  },
-  signInText: {
-    color: "#7F3DFF",
-    fontSize: 16,
-    marginLeft: 5,
-    fontFamily: "Poppins_500Medium",
-    width: "100%",
-    textAlign: "flex-start",
-    overflow: "visible",
-  },
 })
-export default login

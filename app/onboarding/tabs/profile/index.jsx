@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native"
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useState } from "react"
 import { useFocusEffect, useRouter } from "expo-router"
 import { SafeAreaView } from "react-native"
 import { useFonts } from "expo-font"
