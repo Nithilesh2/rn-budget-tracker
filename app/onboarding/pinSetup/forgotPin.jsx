@@ -23,6 +23,7 @@ import { signInWithEmailAndPassword } from "firebase/auth"
 import { doc, getDoc, setDoc } from "firebase/firestore"
 import EyeCloseIcon from "./../../../assets/icons/EyeClose"
 import EyeOpenIcon from "./../../../assets/icons/EyeOpen"
+import LeftArrowIcon from "../../../assets/icons/LeftArrow"
 
 const forgotPin = () => {
   const [showPassword, setShowPassword] = useState(false)
@@ -95,7 +96,16 @@ const forgotPin = () => {
   return (
     <>
       <View style={styles.container}>
-        <Text style={styles.title}>Forgot PIN</Text>
+        <TouchableOpacity style={styles.leftArrow} activeOpacity={1}>
+          <LeftArrowIcon
+            height="24"
+            width="24"
+            color="#7F3DFF"
+            strokeWidth="2.5"
+            onPress={() => router.back()}
+          />
+          <Text style={styles.title}>Forgot PIN</Text>
+        </TouchableOpacity>
         <ScrollView style={styles.bottomContainerTop}>
           <TextInput
             style={styles.inputText}
@@ -175,17 +185,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
     paddingTop: 30,
   },
+  leftArrow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 25,
+    justifyContent: "center",
+    marginLeft: 10,
+    paddingHorizontal: 20
+  },
   title: {
     fontSize: 30,
     fontWeight: "bold",
-    marginBottom: 20,
     width: "100%",
     textAlign: "center",
     fontFamily: "Poppins_400Regular",
     color: "#7F3DFF",
-    width: "100%",
-    textAlign: "center",
-    paddingHorizontal: 20,
   },
   bottomContainerTop: {
     marginVertical: 30,

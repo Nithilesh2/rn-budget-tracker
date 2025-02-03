@@ -88,12 +88,13 @@ const login = () => {
           }
         } catch (error) {
           console.error(error)
-        } finally {
-          setLoading(false)
         }
       })
       .catch((error) => {
         Toast.show(error.message, options)
+      })
+      .finally(() =>{
+         setLoading(false)
       })
   }
 
@@ -141,7 +142,7 @@ const login = () => {
           >
             <Text style={styles.buttonText}>
               {loading ? (
-                  <ActivityIndicator size="large" color="white" />
+                <ActivityIndicator size="large" color="white" />
               ) : (
                 "Login"
               )}

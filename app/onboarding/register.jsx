@@ -69,8 +69,10 @@ const Register = () => {
 
     if (!trimmedName || !trimmedEmail || !trimmedPassword) {
       Toast.show("Please fill in all the fields", options)
+      return
     } else if (trimmedPassword.length < 7) {
       Toast.show("Password must be at least 6 characters", options)
+      return
     }
 
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/

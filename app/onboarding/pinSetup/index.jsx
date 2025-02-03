@@ -20,6 +20,7 @@ import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import { firestore } from "../../../firebase/firebaseConfig"
 import { doc, getDoc, setDoc } from "firebase/firestore"
 import Toast from "react-native-root-toast"
+import { duration } from "moment";
 
 const PinLockScreen = () => {
   const [pin, setPin] = useState("")
@@ -27,6 +28,7 @@ const PinLockScreen = () => {
   const [tempPin, setTempPin] = useState("")
   const [step, setStep] = useState("loading")
   const [loading, setLoading] = useState(false)
+  const [attemptCount, setAttemptCount] = useState(3)
   const router = useRouter()
 
   useFonts({
@@ -51,11 +53,15 @@ const PinLockScreen = () => {
       fontWeight: "600",
     },
   }
+  const optionsForAttempts = {
+    ...options,
+    duration: Toast.durations.SHORT
+  }
 
   useFocusEffect(
     useCallback(() => {
       checkExistingPin()
-    },[])
+    }, [])
   )
 
   const checkExistingPin = async () => {
@@ -128,35 +134,24 @@ const PinLockScreen = () => {
         router.replace("/onboarding/tabs")
         greetings()
       } else {
-        Toast.show("Incorrect PIN. Try again.", options)
+        if (attemptCount === 0) {
+          Toast.show("Too many attempts, redirecting...", optionsForAttempts)
+          setTimeout(() => {
+            router.push("onboarding/pinSetup/forgotPin")
+          }, 1500)
+        } else {
+          setAttemptCount((prev) => {
+            const newCount = prev - 1
+            Toast.show(`Incorrect PIN. Attempt(${attemptCount}).`, options)
+            return newCount
+          })
+        }
         setPin("")
       }
     }
   }
 
   const handleRemoveFromStorage = async () => {
-    // try {
-    //   const userId = await AsyncStorage.getItem("userId")
-    //   if (!userId) {
-    //     Toast.show("User not found!", options)
-    //     router.replace("/onboarding/login")
-    //   }
-
-    //   await AsyncStorage.removeItem("userPin")
-    //   await setDoc(
-    //     doc(firestore, "users", userId),
-    //     { pin: null },
-    //     { merge: true }
-    //   )
-
-    //   Toast.show("PIN removed", options)
-    //   setStep("setup")
-    //   setPin("")
-    //   setSavedPin(null)
-    // } catch (error) {
-    //   Toast.show("Failed to remove PIN", options)
-    //   console.error(error)
-    // }
     router.push("/onboarding/pinSetup/forgotPin")
   }
 
@@ -225,9 +220,11 @@ const PinLockScreen = () => {
             ))}
           </View>
 
-          <TouchableOpacity onPress={handleRemoveFromStorage}>
-            <Text style={styles.removeText}>Forgot PIN</Text>
-          </TouchableOpacity>
+          {step === "enter" && (
+            <TouchableOpacity onPress={handleRemoveFromStorage}>
+              <Text style={styles.removeText}>Forgot PIN</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </>
@@ -249,6 +246,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     fontFamily: "Poppins_500Medium",
     textAlign: "center",
+    width: "100%",
   },
   pinDisplay: {
     flexDirection: "row",
@@ -289,9 +287,12 @@ const styles = StyleSheet.create({
     fontFamily: "Ubuntu_500Medium",
   },
   removeText: {
-    fontSize: 16,
+    fontSize: 18,
     color: "white",
     marginTop: 20,
     textDecorationLine: "underline",
+    fontFamily: "Poppins_500Medium",
+    textAlign: "center",
+    width: "100%",
   },
 })

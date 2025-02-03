@@ -32,9 +32,9 @@ const index = () => {
   const [userEmail, setUserEmail] = useState("")
   const router = useRouter()
   const handleLogout = async () => {
-    setShowLogout(true)
     try {
       await AsyncStorage.removeItem("loggedIn")
+      router.replace("onboarding/login")
     } catch (error) {
       console.error(error)
     }
@@ -141,7 +141,7 @@ const index = () => {
             <TouchableOpacity
               activeOpacity={0.8}
               style={styles.containers}
-              onPress={handleLogout}
+              onPress={() => setShowLogout(true)}
             >
               <View style={styles.iconBoxLogout}>
                 <LogoutIcon width={34} height={34} color="red" />
@@ -170,7 +170,7 @@ const index = () => {
                 <TouchableOpacity
                   activeOpacity={0.8}
                   style={styles.logoutButtonYes}
-                  onPress={() => router.replace("onboarding/login")}
+                  onPress={handleLogout}
                 >
                   <Text style={styles.logoutButtonTextYes}>Yes</Text>
                 </TouchableOpacity>

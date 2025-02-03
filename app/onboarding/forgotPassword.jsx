@@ -5,42 +5,72 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native"
 import React, { useState } from "react"
 import LeftArrowIcon from "./../../assets/icons/LeftArrow"
 import { useRouter } from "expo-router"
+import { auth } from "../../firebase/firebaseConfig"
+import { sendPasswordResetEmail } from "firebase/auth"
+import Toast from "react-native-root-toast"
 
 const forgotPassword = () => {
   const router = useRouter()
   const [email, setEmail] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const options = {
+    duration: Toast.durations.LONG,
+    position: Toast.positions.TOP,
+    animation: true,
+    backgroundColor: "black",
+    textColor: "white",
+    shadow: true,
+    shadowColor: "white",
+    containerStyle: {
+      borderRadius: 15,
+      padding: 15,
+    },
+    textStyle: {
+      fontSize: 16,
+      fontWeight: "600",
+    },
+  }
 
   const handleSendResetLink = () => {
     if (email === "") {
-      Alert.alert("Error", "Please enter your email address.")
+      Toast.show("Please enter your email address.", options)
       return
     }
     if (!email.includes("@") || !email.includes(".")) {
-      Alert.alert("Error", "Please enter a valid email address.")
+      Toast.show("Please enter a valid email address.", options)
       return
     }
-    Alert.alert(
-      "Success",
-      "A password reset link has been sent to your email address."
-    )
-    router.push('onboarding/login')
+    setLoading(true)
+
+    try {
+      sendPasswordResetEmail(auth, email).then(() => {
+        Toast.show(
+          "A password reset link has been sent to your email address.",
+          options
+        )
+        router.back()
+      })
+    } catch (error) {
+      Toast.show(error.message, options)
+    } finally {
+      setLoading(false)
+    }
   }
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.leftArrow}
-        activeOpacity={1}
-        onPress={() => router.back()}
-      >
+      <TouchableOpacity style={styles.leftArrow} activeOpacity={1}>
         <LeftArrowIcon
           height="24"
           width="24"
           color="#7F3DFF"
           strokeWidth="2.5"
+          onPress={() => router.back()}
         />
         <Text style={styles.title}>Forgot Password</Text>
       </TouchableOpacity>
@@ -60,7 +90,13 @@ const forgotPassword = () => {
           style={styles.button}
           onPress={handleSendResetLink}
         >
-          <Text style={styles.buttonText}>Send Reset Link</Text>
+          <Text style={styles.buttonText}>
+            {loading ? (
+              <ActivityIndicator size="large" color="white" />
+            ) : (
+              "Send Reset Link"
+            )}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
