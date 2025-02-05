@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native"
-import React, { useEffect, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import { useRouter } from "expo-router"
 import { useFonts } from "expo-font"
 import {
@@ -24,8 +24,10 @@ import { doc, getDoc, setDoc } from "firebase/firestore"
 import EyeCloseIcon from "./../../../assets/icons/EyeClose"
 import EyeOpenIcon from "./../../../assets/icons/EyeOpen"
 import LeftArrowIcon from "../../../assets/icons/LeftArrow"
+import { AppContext } from "../../../context/AppContext";
 
 const forgotPin = () => {
+  const { options } = useContext(AppContext)
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -39,24 +41,6 @@ const forgotPin = () => {
     Poppins_400Regular,
     Poppins_500Medium,
   })
-
-  const options = {
-    duration: Toast.durations.LONG,
-    position: Toast.positions.TOP,
-    animation: true,
-    backgroundColor: "black",
-    textColor: "white",
-    shadow: true,
-    shadowColor: "white",
-    containerStyle: {
-      borderRadius: 15,
-      padding: 15,
-    },
-    textStyle: {
-      fontSize: 16,
-      fontWeight: "600",
-    },
-  }
 
   const handleChangePin = async () => {
     if (!email || !password || !pin || !rePin) {

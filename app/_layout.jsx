@@ -2,7 +2,8 @@ import { StatusBar } from "react-native"
 import React, { useEffect, useState } from "react"
 import { Stack, useRouter } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import { RootSiblingParent } from 'react-native-root-siblings';
+import { RootSiblingParent } from "react-native-root-siblings"
+import AppStore from "../context/AppStore"
 
 const _layout = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -48,17 +49,19 @@ const _layout = () => {
   if (loading) return null
   return (
     <>
-      <RootSiblingParent>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen name="onboarding" />
-          <Stack.Screen name="index" />
-        </Stack>
-        <StatusBar barStyle="light-content" backgroundColor="#7F3DFF" />
-      </RootSiblingParent>
+      <AppStore>
+        <RootSiblingParent>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+            }}
+          >
+            <Stack.Screen name="onboarding" />
+            <Stack.Screen name="index" />
+          </Stack>
+          <StatusBar barStyle="light-content" backgroundColor="#7F3DFF" />
+        </RootSiblingParent>
+      </AppStore>
     </>
   )
 }

@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native"
-import React, { useCallback, useState } from "react"
+import React, { useCallback, useContext, useState } from "react"
 import { useFocusEffect, useRouter } from "expo-router"
 import { SafeAreaView } from "react-native"
 import { useFonts } from "expo-font"
@@ -24,10 +24,11 @@ import ExportIcon from "./../../../../assets/icons/Export"
 import LogoutIcon from "./../../../../assets/icons/Logout"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import icons from "../../../../components/Icons"
+import { AppContext } from "../../../../context/AppContext";
 
 const index = () => {
+  const { selectedIcon, setSelectedIcon } = useContext(AppContext)
   const [showLogout, setShowLogout] = useState(false)
-  const [selectedIcon, setSelectedIcon] = useState(1)
   const [userName, setUserName] = useState("")
   const [userEmail, setUserEmail] = useState("")
   const router = useRouter()
@@ -62,7 +63,7 @@ const index = () => {
           const storedName = await AsyncStorage.getItem('userName')
           const storedEmail = await AsyncStorage.getItem('userEmail')
           if(storedIcon){
-            setSelectedIcon(storedIcon);
+            setSelectedIcon(icons[JSON.parse(storedIcon)]);
           }
           if(storedName){
             setUserName(storedName);
@@ -91,7 +92,7 @@ const index = () => {
             <View style={styles.topLeftContainer}>
               <View style={styles.userIconContainer}>
                 <Image
-                  source={icons[selectedIcon]}
+                  source={selectedIcon}
                   style={styles.userImg}
                 />
               </View>

@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native"
-import React, { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect, useContext } from "react"
 import { useRouter } from "expo-router"
 import { useFonts } from "expo-font"
 import {
@@ -23,10 +23,14 @@ import PencilEditIcon from "../../../../assets/icons/Pencil"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import icons from "../../../../components/Icons"
 import Toast from "react-native-root-toast"
+import { AppContext } from "../../../../context/AppContext"
+import { doc, updateDoc } from "firebase/firestore"
+import { firestore } from "../../../../firebase/firebaseConfig"
 
-const account = () => {
+const Account = () => {
+  const { selectedIcon, setSelectedIcon } = useContext(AppContext)
   const [edit, setEdit] = useState(false)
-  const [selectedIcon, setSelectedIcon] = useState(icons[0])
+
   const router = useRouter()
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -76,36 +80,32 @@ const account = () => {
     setEdit(!edit)
   }
 
-  useEffect(() => {
-    const handleStorage = async () => {
-      const selectedIconIndex = parseInt(
-        await AsyncStorage.getItem("selectedIcon")
-      )
-      setSelectedIcon(icons[selectedIconIndex])
-    }
-
-    handleStorage()
-  }, [])
-
   const options = {
     duration: Toast.durations.LONG,
     position: Toast.positions.TOP,
     shadow: true,
     animation: true,
     hideOnPress: true,
-    hideOnPress: true,
     delay: 0,
   }
 
   const handleUpdate = async () => {
     try {
-      Toast.show("Profile Updated Successfully", options)
-
-      const iconIndex = icons.indexOf(selectedIcon)
+      const iconIndex = icons.indexOf(JSON.parse(selectedIcon))
       await AsyncStorage.setItem("selectedIcon", JSON.stringify(iconIndex))
-      router.replace("onboarding/tabs/profile/")
+
+      const storedUserId = await AsyncStorage.getItem("userId")
+      if (storedUserId) {
+        const userDocRef = doc(firestore, "users", storedUserId)
+        await updateDoc(userDocRef, {userIconNumber: iconIndex})
+        Toast.show("Profile Updated Successfully", options)
+      }else{
+        Toast.show("Error updating profile", options)
+      }
     } catch (error) {
       console.error(error)
+    }finally{
+      router.replace("onboarding/tabs/profile/")
     }
   }
   const handleCancel = () => {
@@ -195,7 +195,7 @@ const account = () => {
   )
 }
 
-export default account
+export default Account
 
 const styles = StyleSheet.create({
   loadingContainer: {

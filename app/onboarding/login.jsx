@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native"
-import React, { useEffect, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import EyeCloseIcon from "./../../assets/icons/EyeClose"
 import EyeOpenIcon from "./../../assets/icons/EyeOpen"
 import { useRouter } from "expo-router"
@@ -22,8 +22,10 @@ import Toast from "react-native-root-toast"
 import { auth, firestore } from "../../firebase/firebaseConfig"
 import { signInWithEmailAndPassword } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
+import { AppContext } from "../../context/AppContext"
 
 const login = () => {
+  const { options } = useContext(AppContext)
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -42,23 +44,6 @@ const login = () => {
         <ActivityIndicator size="large" color="#7F3DFF" />
       </View>
     )
-  }
-  const options = {
-    duration: Toast.durations.LONG,
-    position: Toast.positions.TOP,
-    animation: true,
-    backgroundColor: "black",
-    textColor: "white",
-    shadow: true,
-    shadowColor: "white",
-    containerStyle: {
-      borderRadius: 15,
-      padding: 15,
-    },
-    textStyle: {
-      fontSize: 16,
-      fontWeight: "600",
-    },
   }
 
   const handleLogin = async () => {
@@ -93,8 +78,8 @@ const login = () => {
       .catch((error) => {
         Toast.show(error.message, options)
       })
-      .finally(() =>{
-         setLoading(false)
+      .finally(() => {
+        setLoading(false)
       })
   }
 

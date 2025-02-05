@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native"
-import React, { useEffect, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import EyeCloseIcon from "./../../assets/icons/EyeClose"
 import EyeOpenIcon from "./../../assets/icons/EyeOpen"
 import { useRouter } from "expo-router"
@@ -21,8 +21,10 @@ import { auth, firestore, provider } from "../../firebase/firebaseConfig"
 import Toast from "react-native-root-toast"
 import { createUserWithEmailAndPassword } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
+import { AppContext } from "../../context/AppContext";
 
 const Register = () => {
+  const { options } = useContext(AppContext)
   const [showPassword, setShowPassword] = useState(false)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -44,28 +46,11 @@ const Register = () => {
     )
   }
 
-  const options = {
-    duration: Toast.durations.LONG,
-    position: Toast.positions.TOP,
-    animation: true,
-    backgroundColor: "black",
-    textColor: "white",
-    shadow: true,
-    shadowColor: "white",
-    containerStyle: {
-      borderRadius: 15,
-      padding: 15,
-    },
-    textStyle: {
-      fontSize: 16,
-      fontWeight: "600",
-    },
-  }
-
   const handleSignUp = () => {
     const trimmedName = name.trim()
     const trimmedEmail = email.trim()
     const trimmedPassword = password.trim()
+    const randomNumberForIcon = Math.floor(Math.random() * 10)
 
     if (!trimmedName || !trimmedEmail || !trimmedPassword) {
       Toast.show("Please fill in all the fields", options)
@@ -90,6 +75,7 @@ const Register = () => {
             name: trimmedName,
             email: trimmedEmail,
             uid: user.uid,
+            userIconNumber: randomNumberForIcon
           })
           Toast.show("User registered successfully", options)
           router.push("/onboarding/login")

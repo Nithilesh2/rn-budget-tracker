@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useContext } from "react"
 import {
   View,
   Text,
@@ -21,8 +21,10 @@ import { firestore } from "../../../firebase/firebaseConfig"
 import { doc, getDoc, setDoc } from "firebase/firestore"
 import Toast from "react-native-root-toast"
 import { duration } from "moment";
+import { AppContext } from "../../../context/AppContext";
 
 const PinLockScreen = () => {
+  const { options } = useContext(AppContext)
   const [pin, setPin] = useState("")
   const [savedPin, setSavedPin] = useState(null)
   const [tempPin, setTempPin] = useState("")
@@ -36,23 +38,6 @@ const PinLockScreen = () => {
     Poppins_500Medium,
     Ubuntu_500Medium,
   })
-  const options = {
-    duration: Toast.durations.LONG,
-    position: Toast.positions.TOP,
-    animation: true,
-    backgroundColor: "black",
-    textColor: "white",
-    shadow: true,
-    shadowColor: "white",
-    containerStyle: {
-      borderRadius: 15,
-      padding: 15,
-    },
-    textStyle: {
-      fontSize: 16,
-      fontWeight: "600",
-    },
-  }
   const optionsForAttempts = {
     ...options,
     duration: Toast.durations.SHORT
