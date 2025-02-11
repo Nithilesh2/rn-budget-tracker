@@ -1,21 +1,19 @@
 import {
   View,
   Text,
-  Button,
   ScrollView,
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
   Image,
 } from "react-native"
-import React, { useCallback, useContext, useState } from "react"
-import { useFocusEffect, useRouter } from "expo-router"
+import React, {  useContext, useState } from "react"
+import {  useRouter } from "expo-router"
 import { SafeAreaView } from "react-native"
 import { useFonts } from "expo-font"
 import {
   Poppins_400Regular,
   Poppins_500Medium,
-  Poppins_600SemiBold,
 } from "@expo-google-fonts/poppins"
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import AccountIcon from "./../../../../assets/icons/Account"
@@ -23,18 +21,18 @@ import SettingsIcon from "./../../../../assets/icons/Settings"
 import ExportIcon from "./../../../../assets/icons/Export"
 import LogoutIcon from "./../../../../assets/icons/Logout"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import icons from "../../../../components/Icons"
 import { AppContext } from "../../../../context/AppContext";
 
 const index = () => {
-  const { selectedIcon, setSelectedIcon } = useContext(AppContext)
+  const { selectedIcon, name, email } = useContext(AppContext)
   const [showLogout, setShowLogout] = useState(false)
-  const [userName, setUserName] = useState("")
-  const [userEmail, setUserEmail] = useState("")
   const router = useRouter()
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem("loggedIn")
+      await AsyncStorage.removeItem("userId")
+      await AsyncStorage.removeItem("userName")
+      await AsyncStorage.removeItem("userEmail")
       router.replace("onboarding/login")
     } catch (error) {
       console.error(error)
@@ -55,30 +53,6 @@ const index = () => {
     )
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      const loadIcon = async () => {
-        try {
-          const storedIcon = await AsyncStorage.getItem('selectedIcon')
-          const storedName = await AsyncStorage.getItem('userName')
-          const storedEmail = await AsyncStorage.getItem('userEmail')
-          if(storedIcon){
-            setSelectedIcon(icons[JSON.parse(storedIcon)]);
-          }
-          if(storedName){
-            setUserName(storedName);
-          }
-          if(storedEmail){
-            setUserEmail(storedEmail);
-          }
-        } catch (error) {
-          console.log(error);
-        }
-      }
-      loadIcon()
-    }, [])
-  )
-
   return (
     <>
       <SafeAreaView style={styles.container}>
@@ -97,8 +71,8 @@ const index = () => {
                 />
               </View>
               <View style={styles.userNameContainer}>
-                <Text style={styles.userNameText}>{userName}</Text>
-                <Text style={styles.userEmailText}>{userEmail}</Text>
+                <Text style={styles.userNameText}>{name}</Text>
+                <Text style={styles.userEmailText}>{email}</Text>
               </View>
             </View>
           </View>

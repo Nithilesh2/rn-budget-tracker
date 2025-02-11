@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native"
-import React, { useState, useRef, useEffect, useContext } from "react"
+import React, { useState, useRef, useContext } from "react"
 import { useRouter } from "expo-router"
 import { useFonts } from "expo-font"
 import {
@@ -20,16 +20,29 @@ import {
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import ArrowLeftIcon from "../../../../assets/icons/ArrowLeft"
 import PencilEditIcon from "../../../../assets/icons/Pencil"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import icons from "../../../../components/Icons"
-import Toast from "react-native-root-toast"
 import { AppContext } from "../../../../context/AppContext"
-import { doc, updateDoc } from "firebase/firestore"
-import { firestore } from "../../../../firebase/firebaseConfig"
+import EyeCloseIcon from "../../../../assets/icons/EyeClose"
+import EyeOpenIcon from "../../../../assets/icons/EyeOpen"
 
 const Account = () => {
-  const { selectedIcon, setSelectedIcon } = useContext(AppContext)
+  const {
+    selectedIcon,
+    setSelectedIcon,
+    name,
+    setName,
+    email,
+    handleUpdate,
+    handleCancel,
+    accountLoading,
+    setOldPassword,
+    setNewPassword,
+    oldPassword,
+    newPassword
+  } = useContext(AppContext)
   const [edit, setEdit] = useState(false)
+  const [showOldPassword, setShowOldPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
 
   const router = useRouter()
   const [fontsLoaded] = useFonts({
@@ -78,39 +91,6 @@ const Account = () => {
       ]).start(() => setEdit(false))
     }
     setEdit(!edit)
-  }
-
-  const options = {
-    duration: Toast.durations.LONG,
-    position: Toast.positions.TOP,
-    shadow: true,
-    animation: true,
-    hideOnPress: true,
-    delay: 0,
-  }
-
-  const handleUpdate = async () => {
-    try {
-      const iconIndex = icons.indexOf(JSON.parse(selectedIcon))
-      await AsyncStorage.setItem("selectedIcon", JSON.stringify(iconIndex))
-
-      const storedUserId = await AsyncStorage.getItem("userId")
-      if (storedUserId) {
-        const userDocRef = doc(firestore, "users", storedUserId)
-        await updateDoc(userDocRef, {userIconNumber: iconIndex})
-        Toast.show("Profile Updated Successfully", options)
-      }else{
-        Toast.show("Error updating profile", options)
-      }
-    } catch (error) {
-      console.error(error)
-    }finally{
-      router.replace("onboarding/tabs/profile/")
-    }
-  }
-  const handleCancel = () => {
-    Toast.show("No changes have been made", options)
-    router.replace("onboarding/tabs/profile/")
   }
 
   return (
@@ -168,6 +148,8 @@ const Account = () => {
                 placeholder="Enter Name"
                 style={styles.inputBox}
                 keyboardType="name-phone-pad"
+                onChangeText={(text) => setName(text)}
+                value={name}
               />
             </View>
 
@@ -175,14 +157,64 @@ const Account = () => {
               <Text style={styles.label}>Email</Text>
               <TextInput
                 placeholder="Enter email"
-                style={styles.inputBox}
+                style={[styles.inputBox, { color: "grey" }]}
                 keyboardType="email-address"
+                editable={false}
+                value={email}
               />
+            </View>
+            <Text style={styles.PasswordTitle}>Change Password</Text>
+            <View style={styles.inputPassBox}>
+              <TextInput
+                style={styles.inputText}
+                placeholder="Old Password"
+                secureTextEntry={showOldPassword ? false : true}
+                onChangeText={(text) => setOldPassword(text)}
+                value={oldPassword}
+              />
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => setShowOldPassword(!showOldPassword)}
+                style={styles.showPassIcon}
+              >
+                {showOldPassword ? (
+                  <EyeCloseIcon width="26" height="26" />
+                ) : (
+                  <EyeOpenIcon width="26" height="26" />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputPassBox}>
+              <TextInput
+                style={styles.inputText}
+                placeholder="New Password"
+                secureTextEntry={showNewPassword ? false : true}
+                onChangeText={(text) => setNewPassword(text)}
+                value={newPassword}
+              />
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => setShowNewPassword(!showNewPassword)}
+                style={styles.showPassIcon}
+              >
+                {showNewPassword ? (
+                  <EyeCloseIcon width="26" height="26" />
+                ) : (
+                  <EyeOpenIcon width="26" height="26" />
+                )}
+              </TouchableOpacity>
             </View>
           </View>
           <View style={styles.buttonContainer}>
             <TouchableOpacity activeOpacity={0.9} onPress={handleUpdate}>
-              <Text style={styles.updateBtn}>Update</Text>
+              <Text style={styles.updateBtn}>
+                {accountLoading ? (
+                  <ActivityIndicator size="large" color="white" />
+                ) : (
+                  "Update"
+                )}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity activeOpacity={0.9} onPress={handleCancel}>
@@ -294,6 +326,14 @@ const styles = StyleSheet.create({
   nameAndEmailContainer: {
     marginBottom: 5,
   },
+  PasswordTitle:{
+    width: "100%",
+    textAlign: "center",
+    fontSize: 21,
+    fontFamily: "Poppins_500Medium",
+    color: "black",
+    marginVertical: 10,
+  },
   label: {
     fontFamily: "Poppins_500Medium",
     fontSize: 16,
@@ -309,6 +349,28 @@ const styles = StyleSheet.create({
     width: "100%",
     fontFamily: "Poppins_400Regular",
     height: 50,
+  },
+  inputText: {
+    height: 50,
+    borderColor: "#D3D3D3",
+    borderWidth: 1,
+    paddingHorizontal: 17,
+    borderRadius: 10,
+    fontSize: 16,
+    width: "100%",
+    marginVertical: 10,
+    fontFamily: "Poppins_400Regular",
+  },
+  inputPassBox: {
+    borderColor: "#D3D3D3",
+    flexDirection: "row",
+    position: "relative",
+    width: "100%",
+  },
+  showPassIcon: {
+    position: "absolute",
+    right: 10,
+    top: 20,
   },
   buttonContainer: {
     flexDirection: "row",

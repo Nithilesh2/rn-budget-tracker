@@ -17,7 +17,7 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins"
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
-import { firestore } from "../../../firebase/firebaseConfig"
+import { auth, firestore } from "../../../firebase/firebaseConfig"
 import { doc, getDoc, setDoc } from "firebase/firestore"
 import Toast from "react-native-root-toast"
 import { duration } from "moment";
@@ -45,6 +45,11 @@ const PinLockScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
+      const user = auth.currentUser
+      if (!user) {
+        Toast.show("Please log in again.", options)
+        router.replace("onboarding/login")
+      }
       checkExistingPin()
     }, [])
   )
@@ -52,10 +57,6 @@ const PinLockScreen = () => {
   const checkExistingPin = async () => {
     setLoading(true)
     const userId = await AsyncStorage.getItem("userId")
-    if (!userId) {
-      Toast.show("User not found!", options)
-      router.replace("/onboarding/login")
-    }
 
     const userDocRef = doc(firestore, "users", userId)
     const userDocSnap = await getDoc(userDocRef)
