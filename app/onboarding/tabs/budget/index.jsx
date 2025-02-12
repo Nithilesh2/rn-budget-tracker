@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native"
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useContext } from "react"
 import { useFonts } from "expo-font"
 import {
   Poppins_400Regular,
@@ -7,47 +7,33 @@ import {
 } from "@expo-google-fonts/poppins"
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import { useRouter } from "expo-router"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { useFocusEffect } from "@react-navigation/native"
+import { AppContext } from "../../../../context/AppContext"
 
 const Budget = () => {
+  const { budget, userExpenses } = useContext(AppContext)
   const router = useRouter()
   useFonts({
     Poppins_400Regular,
     Poppins_500Medium,
     Ubuntu_500Medium,
   })
+
   const date = new Date()
   const options = { month: "long" }
   const monthName = new Intl.DateTimeFormat("en-US", options).format(date)
-  const [budget, setBudget] = useState(0)
-  const [spent, setSpent] = useState(0)
 
-  const spentPercentage = (spent / budget) * 100
+  const spentPercentage = (userExpenses / budget) * 100
 
-  const handleEditBudget = async () => {
-    try {
-      router.push('onboarding/tabs/budget/setBudget')
-    } catch (error) {
-      console.log(error)
-    }
+  let progressBarColor = "#7F3DFF"
+  if (spentPercentage >= 80 && spentPercentage < 100) {
+    progressBarColor = "#FFA500"
+  } else if (spentPercentage >= 100) {
+    progressBarColor = "#FF3D3D"
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      const loadBudget = async () => {
-        try {
-          const storedBudget = await AsyncStorage.getItem("selectedBudget")
-          if (storedBudget) {
-            setBudget(Number(storedBudget))
-          }
-        } catch (error) {
-          console.log(error)
-        }
-      }
-      loadBudget()
-    }, [])
-  )
+  const handleEditBudget = () => {
+    router.push("onboarding/tabs/budget/setBudget")
+  }
 
   return (
     <View style={styles.container}>
@@ -58,9 +44,7 @@ const Budget = () => {
         {budget === 0 ? (
           <>
             <View style={styles.nobudgetContainer}>
-              <Text style={styles.nobudgetText}>
-                No budget set for this month.
-              </Text>
+              <Text style={styles.nobudgetText}>No budget set for this month.</Text>
               <Text style={styles.nobudgetText2}>
                 Let's make one so you are in control
               </Text>
@@ -68,7 +52,7 @@ const Budget = () => {
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 activeOpacity={0.9}
-                style={styles.setNoButgetContainer}
+                style={styles.setNoBudgetContainer}
                 onPress={() => router.push("/onboarding/tabs/budget/setBudget")}
               >
                 <Text style={styles.setButtonText}>Set Budget</Text>
@@ -79,22 +63,25 @@ const Budget = () => {
           <>
             <View style={styles.yesBudgetContainer}>
               <Text style={styles.yesbudgetText}>
-                Remaining ₹{budget - spent}
+                Remaining ₹{Math.max(0, budget - userExpenses)}
               </Text>
 
               <View style={styles.progressBarContainer}>
                 <View
-                  style={[styles.progressBar, { width: `${spentPercentage}%` }]}
+                  style={[
+                    styles.progressBar,
+                    { width: `${Math.min(100, spentPercentage)}%`, backgroundColor: progressBarColor }
+                  ]}
                 />
               </View>
               <Text style={styles.progressText}>
-                Spent: ₹{spent} out of ₹{budget}
+                Spent: ₹{userExpenses} out of ₹{budget}
               </Text>
             </View>
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 activeOpacity={0.9}
-                style={styles.setNoButgetContainer}
+                style={styles.setNoBudgetContainer}
                 onPress={handleEditBudget}
               >
                 <Text style={styles.setButtonText}>Edit Budget</Text>
@@ -157,7 +144,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: "center",
   },
-  setNoButgetContainer: {
+  setNoBudgetContainer: {
     backgroundColor: "#7F3DFF",
     borderRadius: 15,
     width: "100%",
@@ -192,7 +179,6 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: "100%",
-    backgroundColor: "#7F3DFF",
   },
   progressText: {
     fontFamily: "Poppins_400Regular",

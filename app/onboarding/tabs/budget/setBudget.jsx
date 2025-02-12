@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native"
-import React, { useEffect, useState } from "react"
+import React, { useContext } from "react"
 import ArrowLeftIcon from "../../../../assets/icons/ArrowLeft"
 import { useFonts } from "expo-font"
 import {
@@ -15,50 +15,21 @@ import {
 } from "@expo-google-fonts/poppins"
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import { useRouter } from "expo-router"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import Toast from "react-native-root-toast"
+import { AppContext } from "../../../../context/AppContext"
+import { ActivityIndicator } from "react-native"
 
 const setBudget = () => {
+  const { options, handleContinue, setBudget, budget, budgetLoading } =
+    useContext(AppContext)
   const router = useRouter()
-  const [budget, setBudget] = useState("")
   useFonts({
     Poppins_400Regular,
     Poppins_500Medium,
     Ubuntu_500Medium,
   })
-  const options = {
-    duration: Toast.durations.LONG,
-    position: Toast.positions.TOP,
-    shadow: true,
-    animation: true,
-    hideOnPress: true,
-    hideOnPress: true,
-    delay: 0,
-  }
 
-  useEffect(() => {
-    const loadBudget = async () => {
-      try {
-        const storedBudget = await AsyncStorage.getItem("selectedBudget")
-        setBudget(storedBudget)
-      } catch (error) {
-        console.log("Error loading currency:", error)
-      }
-    }
-    loadBudget()
-  }, [])
-
-  const handleContinue = async () => {
-    try {
-      await AsyncStorage.setItem("selectedBudget", budget)
-      router.back()
-      Toast.show(`Budget changed to ${budget}`, options)
-    } catch (err) {
-      console.log("Error setting budget:", err)
-    }
-  }
-
-  const handleBack = ()=>{
+  const handleBack = () => {
     router.back()
     Toast.show("Cancelled budget change", options)
   }
@@ -106,7 +77,13 @@ const setBudget = () => {
           style={styles.buttonContainer}
           onPress={handleContinue}
         >
-          <Text style={styles.saveButton}>Continue</Text>
+          <Text style={styles.saveButton}>
+            {budgetLoading ? (
+              <ActivityIndicator size="large" color="#7F3DFF" />
+            ) : (
+              "Continue"
+            )}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

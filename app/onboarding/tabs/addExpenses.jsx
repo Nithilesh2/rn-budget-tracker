@@ -6,10 +6,10 @@ import {
   View,
   TouchableOpacity,
   TextInput,
-  ScrollView,
   Animated,
+  Dimensions,
 } from "react-native"
-import React, { useState, useRef, useEffect } from "react"
+import React, { useRef, useEffect, useContext } from "react"
 import ArrowLeftIcon from "./../../../assets/icons/ArrowLeft"
 import { useFonts } from "expo-font"
 import {
@@ -19,11 +19,26 @@ import {
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import { SelectList } from "react-native-dropdown-select-list"
 import { useRouter } from "expo-router"
+import { AppContext } from "./../../../context/AppContext"
+import IconMap from "../../../assets/IconMap/IconMap"
+import data from "../../../components/IconsData"
+
+const { width } = Dimensions.get("screen")
 
 const AddExpenses = () => {
-  const [selectedType, setSelectedType] = useState("Expense")
-  const [selected, setSelected] = useState("")
-  const [amount, setAmount] = useState("")
+  const {
+    handleSubmit,
+    selectedType,
+    setSelectedType,
+    selected,
+    setSelected,
+    amount,
+    setAmount,
+    setDescription,
+    description,
+    amountLoading,
+    setSIcon,
+  } = useContext(AppContext)
 
   const bgColorAnim = useRef(new Animated.Value(0)).current
 
@@ -50,24 +65,6 @@ const AddExpenses = () => {
       </View>
     )
   }
-
-  const data = [
-    { key: "1", value: "Food" },
-    { key: "2", value: "Groceries" },
-    { key: "3", value: "Rent" },
-    { key: "4", value: "Fuel" },
-    { key: "5", value: "Theatres" },
-    { key: "6", value: "Utilities" },
-    { key: "7", value: "Shopping" },
-    { key: "8", value: "Transportation" },
-    { key: "9", value: "Entertainment" },
-    { key: "10", value: "Dining Out" },
-    { key: "11", value: "Healthcare" },
-    { key: "12", value: "Education" },
-    { key: "13", value: "Subscriptions" },
-    { key: "14", value: "Travel" },
-    { key: "15", value: "Others" },
-  ]
 
   const backgroundColor = bgColorAnim.interpolate({
     inputRange: [0, 1],
@@ -152,24 +149,65 @@ const AddExpenses = () => {
         </View>
 
         <View style={styles.descriptionContainer}>
-          <SelectList
-            setSelected={(val) => setSelected(val)}
-            data={data}
-            save="value"
-            placeholder="Choose Category"
-            boxStyles={styles.selectBox}
-            inputStyles={styles.selectInput}
-            dropdownStyles={styles.dropdown}
-            dropdownTextStyles={styles.dropdownText}
-          />
+          <View style={styles.selectContainer}>
+            <SelectList
+              setSelected={(val) => {
+                setSelected(val)
+                const selectedItem = data.find((item) => item.value === val)
+                setSIcon(selectedItem ? selectedItem.icon : null)
+              }}
+              data={data}
+              save="value"
+              placeholder="Choose Category"
+              boxStyles={styles.selectBox}
+              inputStyles={styles.selectInput}
+              dropdownStyles={styles.dropdown}
+              dropdownTextStyles={styles.dropdownText}
+              defaultOption={null}
+              selectedValue={selected}
+              search={false}
+            />
+            {selected && (
+              <View style={styles.iconContainer}>
+                {(() => {
+                  const selectedItem = data.find(
+                    (item) => item.value === selected
+                  )
+                  if (!selectedItem) return null
+
+                  const { icon, color, fill } = selectedItem
+                  return IconMap[icon]
+                    ? React.createElement(IconMap[icon], {
+                        height: 34,
+                        width: 34,
+                        color: color,
+                        fill: fill,
+                      })
+                    : null
+                })()}
+              </View>
+            )}
+          </View>
           <TextInput
             placeholder="Description"
             style={styles.descriptionTextInput}
-            multiline={true}
-            numberOfLines={4}
+            multiline={false}
+            numberOfLines={1}
+            onChangeText={(text) => setDescription(text)}
+            value={description}
           />
-          <TouchableOpacity style={styles.submitButton} activeOpacity={0.9}>
-            <Text style={styles.submitButtonText}>Submit</Text>
+          <TouchableOpacity
+            style={styles.submitButton}
+            activeOpacity={0.9}
+            onPress={handleSubmit}
+          >
+            <Text style={styles.submitButtonText}>
+              {amountLoading ? (
+                <ActivityIndicator size="large" color="white" />
+              ) : (
+                "Submit"
+              )}
+            </Text>
           </TouchableOpacity>
         </View>
       </Animated.ScrollView>
@@ -299,13 +337,26 @@ const styles = StyleSheet.create({
     height: "100%",
     marginTop: 20,
   },
+  selectContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+    marginBottom: 20,
+    width: "100%",
+  },
+  iconContainer: {
+    marginLeft: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 7,
+  },
   selectBox: {
     borderWidth: 1.5,
     borderColor: "black",
     borderRadius: 15,
     paddingHorizontal: 15,
     alignItems: "center",
-    marginBottom: 10,
+    width: width - 90,
   },
   selectInput: {
     fontSize: 16,

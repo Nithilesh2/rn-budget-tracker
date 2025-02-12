@@ -1,194 +1,116 @@
-import { StyleSheet, Text, View, FlatList } from "react-native"
-import React from "react"
-// import MenuIcon from "../../../assets/icons/Menu"
+import { StyleSheet, Text, View, FlatList, RefreshControl } from "react-native"
+import React, { useContext, useState } from "react"
 import { Searchbar } from "react-native-paper"
-import ShoppingBagIcon from "../../../assets/icons/Shopping"
-import FoodIcon from "../../../assets/icons/Food"
-import CarIcon from "../../../assets/icons/Transport"
-import SubscriptionIcon from "../../../assets/icons/Subscription"
 import { useFonts } from "expo-font"
 import { Poppins_400Regular } from "@expo-google-fonts/poppins"
-import { format, isToday, isYesterday, parseISO } from "date-fns"
+import { format, isToday, isYesterday } from "date-fns"
+import { AppContext } from "../../../context/AppContext"
+import IconMap from "../../../assets/IconMap/IconMap"
+import data from "./../../../components/IconsData"
 
 const Transactions = () => {
-  useFonts({
-    Poppins_400Regular,
-  })
+  const { userData, refreshing, setRefreshing, fetchData } = useContext(AppContext)
+  const [searchQuery, setSearchQuery] = useState("")
 
-  const transactionsData = [
-    {
-      id: 1,
-      icon: (
-        <ShoppingBagIcon width="32" height="32" color="goldenrod" fill="gold" />
-      ),
-      title: "Shopping",
-      description: "Buy some groceries",
-      amount: "- ₹123",
-      time: "10:00 AM",
-      date: "2025/02/01",
-    },
-    {
-      id: 2,
-      icon: <FoodIcon width="32" height="32" color="blue" fill="lightblue" />,
-      title: "Restaurant",
-      description: "Dinner at a cafe",
-      amount: "- ₹456",
-      time: "8:00 PM",
-      date: "2025/01/31",
-    },
-    {
-      id: 3,
-      icon: <CarIcon width="32" height="32" color="red" fill="pink" />,
-      title: "Transport",
-      description: "Taxi fare",
-      amount: "+₹200",
-      time: "9:00 AM",
-      date: "2025/01/30",
-    },
-    {
-      id: 4,
-      icon: (
-        <SubscriptionIcon width="32" height="32" color="purple" fill="violet" />
-      ),
-      title: "Subscription",
-      description: "Monthly Netflix",
-      amount: "- ₹499",
-      time: "5:00 PM",
-      date: "2025/01/30",
-    },
-    {
-      id: 5,
-      icon: (
-        <ShoppingBagIcon width="32" height="32" color="goldenrod" fill="gold" />
-      ),
-      title: "Shopping",
-      description: "Buy some groceries again",
-      amount: "- ₹1873",
-      time: "11:00 AM",
-      date: "2025/01/29",
-    },
-    {
-      id: 6,
-      icon: <FoodIcon width="32" height="32" color="orange" fill="yellow" />,
-      title: "Fast Food",
-      description: "Ordered pizza",
-      amount: "- ₹320",
-      time: "7:30 PM",
-      date: "2025/01/28",
-    },
-    {
-      id: 7,
-      icon: <CarIcon width="32" height="32" color="green" fill="lightgreen" />,
-      title: "Fuel",
-      description: "Filled gas tank",
-      amount: "- ₹1500",
-      time: "6:00 PM",
-      date: "2025/01/27",
-    },
-    {
-      id: 8,
-      icon: (
-        <SubscriptionIcon
-          width="32"
-          height="32"
-          color="blue"
-          fill="lightblue"
-        />
-      ),
-      title: "Spotify",
-      description: "Monthly subscription",
-      amount: "- ₹149",
-      time: "4:00 PM",
-      date: "2025/01/26",
-    },
-    {
-      id: 9,
-      icon: <ShoppingBagIcon width="32" height="32" color="brown" fill="tan" />,
-      title: "Clothing",
-      description: "Bought new jeans",
-      amount: "- ₹1999",
-      time: "2:00 PM",
-      date: "2025/01/25",
-    },
-    {
-      id: 10,
-      icon: <CarIcon width="32" height="32" color="gray" fill="silver" />,
-      title: "Parking",
-      description: "Parking fees",
-      amount: "- ₹50",
-      time: "9:30 AM",
-      date: "2025/01/24",
-    },
-    {
-      id: 11,
-      icon: <SubscriptionIcon width="32" height="32" color="red" fill="pink" />,
-      title: "Gym",
-      description: "Monthly membership",
-      amount: "- ₹799",
-      time: "6:00 AM",
-      date: "2025/01/23",
-    },
-    {
-      id: 12,
-      icon: <FoodIcon width="32" height="32" color="brown" fill="tan" />,
-      title: "Coffee",
-      description: "Starbucks coffee",
-      amount: "- ₹250",
-      time: "8:45 AM",
-      date: "2025/01/22",
-    },
-  ]
+  useFonts({ Poppins_400Regular })
 
-  const formatDate = (dateString) => {
-    const parsedDate = parseISO(dateString.replace(/\//g, "-"))
-    if (isToday(parsedDate)) return "Today"
-    if (isYesterday(parsedDate)) return "Yesterday"
-    return format(parsedDate, "yyyy/MM/dd")
+  const sortedTransactions = [...userData].sort(
+    (a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)
+  )
+
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp?.seconds * 1000)
+    if (isToday(date)) return "Today"
+    if (isYesterday(date)) return "Yesterday"
+    return format(date, "yyyy/MM/dd")
   }
 
-  const groupedTransactions = transactionsData.reduce((acc, transaction) => {
-    const formattedDate = formatDate(transaction.date)
-    if (!acc[formattedDate]) acc[formattedDate] = []
-    acc[formattedDate].push(transaction)
+  const groupedTransactions = sortedTransactions.reduce((acc, transaction) => {
+    const dateLabel = formatDate(transaction.timestamp)
+    if (!acc[dateLabel]) acc[dateLabel] = []
+    acc[dateLabel].push(transaction)
     return acc
   }, {})
 
+  const filteredTransactions = Object.entries(groupedTransactions).reduce((acc, [date, transactions]) => {
+    const filteredItems = transactions.filter(
+      (transaction) =>
+        transaction.categoryType.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        transaction.description.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    if (filteredItems.length > 0) acc[date] = filteredItems
+    return acc
+  }, {})
+
+  const handleRefreshing = () => {
+    setRefreshing(true)
+    fetchData()
+    setRefreshing(false)
+  }
+
   return (
     <View style={styles.container}>
-      {/* <View style={styles.topContainer}>
-        <MenuIcon width={30} height={30} color="black" strokeWidth={2} />
-      </View> */}
       <View style={styles.middleContainer}>
         <Searchbar
           placeholder="Search for items..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
           style={styles.searchContainer}
           inputStyle={{ fontFamily: "Poppins_400Regular", paddingBottom: 5 }}
         />
       </View>
 
       <FlatList
-        data={Object.entries(groupedTransactions)}
+        data={Object.entries(filteredTransactions)}
         keyExtractor={(item) => item[0]}
+        refreshControl={<RefreshControl onRefresh={handleRefreshing} refreshing={refreshing} />}
         renderItem={({ item }) => (
           <>
             <Text style={styles.dateTitle}>{item[0]}</Text>
             <View style={styles.transactionContainer}>
-              {item[1].map((transaction) => (
-                <View key={transaction.id} style={styles.transactionItem}>
-                  {transaction.icon}
-                  <View style={styles.transactionDetails}>
-                    <Text style={styles.transactionTitle}>
-                      {transaction.title}
-                    </Text>
-                    <Text style={styles.transactionDesc}>
-                      {transaction.description}
-                    </Text>
+              {item[1].map((transaction, index) => {
+                const selectedItem = data.find((item) => item.value === transaction.categoryType)
+                return (
+                  <View key={index} style={styles.transactionItem}>
+                    {selectedItem && IconMap[selectedItem.icon]
+                      ? React.createElement(IconMap[selectedItem.icon], {
+                          height: 34,
+                          width: 34,
+                          color: selectedItem.color,
+                          fill: selectedItem.fill,
+                        })
+                      : null}
+                    <View style={styles.transactionDetails}>
+                      <Text style={styles.transactionTitle}>{transaction.categoryType}</Text>
+                      <Text style={styles.transactionDesc}>{transaction.description}</Text>
+                    </View>
+
+                    <View style={styles.moneyAndTimeContainer}>
+                      <Text
+                        style={[
+                          styles.transactionAmount,
+                          {
+                            color: transaction.method === "Income" ? "green" : "red",
+                          },
+                        ]}
+                      >
+                        {transaction.method === "Expense"
+                          ? `- ₹${transaction.amount}`
+                          : `+ ₹${transaction.amount}`}
+                      </Text>
+                      <Text style={styles.recentTransactionsItemTime}>
+                        {transaction.timestamp?.seconds
+                          ? new Date(transaction.timestamp.seconds * 1000).toLocaleTimeString("en-US", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
+                            })
+                          : "N/A"}
+                      </Text>
+                    </View>
                   </View>
-                  <Text style={styles.transactionAmount}>
-                    {transaction.amount}
-                  </Text>
-                </View>
-              ))}
+                )
+              })}
             </View>
           </>
         )}
@@ -204,14 +126,9 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     flex: 1,
   },
-  topContainer: {
-    width: "100%",
-    alignItems: "flex-end",
-    paddingHorizontal: 20
-  },
   middleContainer: {
     paddingVertical: 20,
-    paddingHorizontal: 20
+    paddingHorizontal: 20,
   },
   searchContainer: {
     width: "100%",
@@ -223,12 +140,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginTop: 14,
-    paddingHorizontal: 20
+    paddingHorizontal: 20,
   },
   transactionContainer: {
     width: "100%",
     marginVertical: 10,
-    paddingHorizontal: 20
+    paddingHorizontal: 20,
   },
   transactionItem: {
     flexDirection: "row",
@@ -261,5 +178,19 @@ const styles = StyleSheet.create({
   transactionAmount: {
     fontSize: 16,
     fontWeight: "bold",
+  },
+  moneyAndTimeContainer: {
+    justifyContent: "center",
+    alignItems: "flex-end",
+    marginTop: 10,
+    gap: 3,
+    width: 100,
+  },
+  recentTransactionsItemTime: {
+    fontFamily: "Poppins_400Regular",
+    fontSize: 14,
+    color: "grey",
+    textAlign: "flex-start",
+    overflow: "visible",
   },
 })

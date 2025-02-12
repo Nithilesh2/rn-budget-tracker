@@ -9,8 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native"
-import React, { useCallback, useEffect, useState } from "react"
-import ArrowDownIcon from "./../../../assets/icons/ArrowDown"
+import React, { useCallback, useContext, useState } from "react"
 import NotificationIcon from "./../../../assets/icons/Bell"
 import {
   Poppins_500Medium,
@@ -19,55 +18,24 @@ import {
 import { useFonts } from "expo-font"
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import SpendIncomeLineChart from "../../../components/Chart"
-import ShoppingBagIcon from "./../../../assets/icons/Shopping"
-import FoodIcon from "./../../../assets/icons/Food"
-import CarIcon from "./../../../assets/icons/Transport"
-import SubscriptionIcon from "./../../../assets/icons/Subscription"
 import { useFocusEffect, useRouter } from "expo-router"
 import icons from "../../../components/Icons"
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { AppContext } from "../../../context/AppContext"
+import IconMap from "../../../assets/IconMap/IconMap"
+import data from "../../../components/IconsData"
 
 const index = () => {
-  const transactions = [
-    {
-      id: 1,
-      icon: (
-        <ShoppingBagIcon width="32" height="32" color="goldenrod" fill="gold" />
-      ),
-      title: "Shopping",
-      description: "Buy some groceries",
-      amount: "- ₹123",
-      time: "10:00 AM",
-    },
-    {
-      id: 2,
-      icon: <FoodIcon width="32" height="32" color="blue" fill="lightblue" />,
-      title: "Restaurant",
-      description: "Dinner at a cafe",
-      amount: "- ₹456",
-      time: "8:00 PM",
-    },
-    {
-      id: 3,
-      icon: <CarIcon width="32" height="32" color="red" fill="pink" />,
-      title: "Transport",
-      description: "Taxi fare",
-      amount: "+₹200",
-      time: "9:00 AM",
-    },
-    {
-      id: 4,
-      icon: (
-        <SubscriptionIcon width="32" height="32" color="purple" fill="violet" />
-      ),
-      title: "Subscription",
-      description: "Monthly Netflix",
-      amount: "- ₹499",
-      time: "5:00 PM",
-    },
-  ]
+  const {
+    userData,
+    fetchData,
+    userIncome,
+    userExpenses,
+    refreshing,
+    setRefreshing,
+    budget
+  } = useContext(AppContext)
   const [selectedIcon, setSelectedIcon] = useState(1)
-  const [refreshing, setRefreshing] = useState(false)
   const router = useRouter()
   const date = new Date()
   const options = { month: "long" }
@@ -93,12 +61,10 @@ const index = () => {
       loadIcon()
     }, [])
   )
-
   const handleRefreshing = () => {
     setRefreshing(true)
-    setTimeout(() => {
-      setRefreshing(false)
-    }, 4000)
+    fetchData()
+    setRefreshing(false)
   }
   if (!fontsLoaded) {
     return (
@@ -124,7 +90,6 @@ const index = () => {
               <Image source={icons[selectedIcon]} style={styles.userImg} />
             </View>
             <View style={styles.topMiddle}>
-              <ArrowDownIcon height="26" width="26" color="black" />
               <Text style={styles.monethSpents}>{monthName}</Text>
             </View>
             <View style={styles.topRight}>
@@ -138,8 +103,8 @@ const index = () => {
             </View>
           </View>
           <View style={styles.accBal}>
-            <Text style={styles.accBaltext}>Account Balance</Text>
-            <Text style={styles.accBalAmount}>₹1,234</Text>
+            <Text style={styles.accBaltext}>Monthly Budget</Text>
+            <Text style={styles.accBalAmount}>₹{budget}</Text>
           </View>
           <View style={styles.spentsDebitAndCredit}>
             <View style={styles.creditBox}>
@@ -149,7 +114,7 @@ const index = () => {
               />
               <View style={styles.boxRight}>
                 <Text style={styles.boxRightText}>Income</Text>
-                <Text style={styles.boxRightAmount}>₹234</Text>
+                <Text style={styles.boxRightAmount}>₹{userIncome}</Text>
               </View>
             </View>
             <View style={styles.debitBox}>
@@ -159,7 +124,7 @@ const index = () => {
               />
               <View style={styles.creditBoxRight}>
                 <Text style={styles.boxRightText}>Expenses</Text>
-                <Text style={styles.boxRightAmount}>₹580</Text>
+                <Text style={styles.boxRightAmount}>₹{userExpenses}</Text>
               </View>
             </View>
           </View>
@@ -174,42 +139,68 @@ const index = () => {
             <TouchableOpacity
               activeOpacity={0.9}
               style={styles.recentTransicitionsButton}
-              onPress={() => router.push('/onboarding/tabs/transactions')}
+              onPress={() => router.push("/onboarding/tabs/transactions")}
             >
               <Text style={styles.recentTransicitionsButtonText}>See All</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.recentTransactionsList}>
-            {transactions.map((transaction) => (
-              <View key={transaction.id} style={styles.recentTransactionsItem}>
-                {transaction.icon}
-                <View style={styles.recentTransactionsItemMiddle}>
-                  <Text style={styles.recentTransactionsItemText}>
-                    {transaction.title}
-                  </Text>
-                  <Text style={styles.recentTransactionsItemDescription}>
-                    {transaction.description}
-                  </Text>
-                </View>
-                <View style={styles.recentTransactionsItemBottom}>
-                  <Text
-                    style={[
-                      styles.recentTransactionsItemAmount,
-                      {
-                        color: transaction.amount.startsWith("+")
-                          ? "green"
-                          : "red",
-                      },
-                    ]}
-                  >
-                    {transaction.amount}
-                  </Text>
-                  <Text style={styles.recentTransactionsItemTime}>
-                    {transaction.time}
-                  </Text>
-                </View>
-              </View>
-            ))}
+            {[...userData]
+              .sort(
+                (a, b) =>
+                  (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)
+              )
+              .map((transaction, index) => {
+                const selectedItem = data.find(
+                  (item) => item.value === transaction.categoryType
+                )
+                return (
+                  <View key={index} style={styles.recentTransactionsItem}>
+                    {selectedItem && IconMap[selectedItem.icon]
+                      ? React.createElement(IconMap[selectedItem.icon], {
+                          height: 34,
+                          width: 34,
+                          color: selectedItem.color,
+                          fill: selectedItem.fill,
+                        })
+                      : null}
+                    <View style={styles.recentTransactionsItemMiddle}>
+                      <Text style={styles.recentTransactionsItemText}>
+                        {transaction.categoryType}
+                      </Text>
+                      <Text style={styles.recentTransactionsItemDescription}>
+                        {transaction.description}
+                      </Text>
+                    </View>
+                    <View style={styles.recentTransactionsItemBottom}>
+                      <Text
+                        style={[
+                          styles.recentTransactionsItemAmount,
+                          {
+                            color:
+                              transaction.method === "Income" ? "green" : "red",
+                          },
+                        ]}
+                      >
+                        {transaction.method === "Expense"
+                          ? `- ₹${transaction.amount}`
+                          : `+ ₹${transaction.amount}`}
+                      </Text>
+                      <Text style={styles.recentTransactionsItemTime}>
+                        {transaction.timestamp?.seconds
+                          ? new Date(
+                              transaction.timestamp.seconds * 1000
+                            ).toLocaleTimeString("en-US", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
+                            })
+                          : "N/A"}
+                      </Text>
+                    </View>
+                  </View>
+                )
+              })}
           </View>
         </ScrollView>
       </SafeAreaView>
