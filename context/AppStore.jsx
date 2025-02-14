@@ -6,11 +6,7 @@ import { auth, firestore } from "../firebase/firebaseConfig"
 import icons from "../components/Icons"
 import Toast from "react-native-root-toast"
 import { useRouter } from "expo-router"
-import {
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-  updatePassword,
-} from "firebase/auth"
+import { signInWithEmailAndPassword, updatePassword } from "firebase/auth"
 
 const AppStore = ({ children }) => {
   const [refreshing, setRefreshing] = useState(false)
@@ -38,15 +34,64 @@ const AppStore = ({ children }) => {
   const [userIncome, setUserIncome] = useState()
   const [userExpenses, setUserExpenses] = useState()
 
-  //Budget
+  // Budget
   const [budget, setBudget] = useState(0)
   const [budgetLoading, setBudgetLoading] = useState(false)
 
+  // Toast configuration
+  const options = {
+    duration: Toast.durations.LONG,
+    position: Toast.positions.TOP,
+    animation: true,
+    backgroundColor: "black",
+    textColor: "white",
+    shadow: true,
+    shadowColor: "white",
+    containerStyle: {
+      borderRadius: 15,
+      padding: 15,
+    },
+    textStyle: {
+      fontSize: 16,
+      fontWeight: "600",
+    },
+  }
+
+  // Fetch user data
+  const fetchData = async () => {
+    try {
+      const userId = await AsyncStorage.getItem("userId")
+      if (!userId) {
+        router.push("onboarding/login")
+        return
+      }
+
+      const userDoc = await getDoc(doc(firestore, "users", storedUserId))
+      if (userDoc.exists()) {
+        const userData = userDoc.data()
+        setUserIncome(userData.totalIncomeAmount)
+        setUserExpenses(userData.totalExpensesAmount)
+        setBudget(userData.budget)
+        const userDataExpenses = userData.expenses || []
+        setUserData(userDataExpenses)
+      } else {
+        Toast.show("User document does not exist", options)
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error)
+      Toast.show("Failed to load data", options)
+    }
+  }
+
+  // Fetch user data on component mount
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchInitialData = async () => {
       try {
         const userId = await AsyncStorage.getItem("userId")
-        if (!userId) return
+        if (!userId) {
+          router.replace("onboarding/login")
+          return
+        }
 
         setStoredUserId(userId)
         const userDoc = await getDoc(doc(firestore, "users", userId))
@@ -71,27 +116,16 @@ const AppStore = ({ children }) => {
       }
     }
 
-    fetchData()
-  }, [])
+    fetchInitialData()
+  }, [storedUserId])
 
-  const options = {
-    duration: Toast.durations.LONG,
-    position: Toast.positions.TOP,
-    animation: true,
-    backgroundColor: "black",
-    textColor: "white",
-    shadow: true,
-    shadowColor: "white",
-    containerStyle: {
-      borderRadius: 15,
-      padding: 15,
-    },
-    textStyle: {
-      fontSize: 16,
-      fontWeight: "600",
-    },
-  }
+  useEffect(() => {
+    if (storedUserId) {
+      fetchData()
+    }
+  }, [storedUserId])
 
+  // Handle profile update
   const handleUpdate = async () => {
     try {
       if (!storedUserId) {
@@ -99,46 +133,73 @@ const AppStore = ({ children }) => {
         return
       }
       setAccountLoading(true)
-
-      const user = auth.currentUser
       const userDocRef = doc(firestore, "users", storedUserId)
-      const iconIndex = icons.indexOf(JSON.parse(selectedIcon))
-      await AsyncStorage.setItem("selectedIcon", JSON.stringify(iconIndex))
-      await updateDoc(userDocRef, { userIconNumber: iconIndex })
-
       const userDoc = (await getDoc(userDocRef)).data()
 
+      let changesMade = false
+
+      const iconIndex = selectedIcon ? icons.indexOf(JSON.parse(selectedIcon)) : -1;
+      if (userDoc.userIconNumber !== iconIndex) {
+        await updateDoc(userDocRef, { userIconNumber: iconIndex })
+        await AsyncStorage.setItem("selectedIcon", JSON.stringify(iconIndex))
+        Toast.show("Icon updated successfully", options)
+        changesMade = true
+      }
+
       if (name.trim() !== userDoc.name) {
-        if (name !== "") {
+        if (name.trim()) {
           await updateDoc(userDocRef, { name: name.trim() })
-          Toast.show("Name changed", options)
-        } else {
+          await AsyncStorage.setItem("userName", name.trim())
+          Toast.show("Name updated successfully", options)
+          changesMade = true
+        }
+        if (!name.trim()) {
           Toast.show("Name cannot be empty", options)
+          return
         }
       }
 
-      if (oldPassword.trim() && newPassword.trim()) {
+      if (newPassword.trim()) {
         try {
-          const credentials = EmailAuthProvider.credential(
-            user.email,
-            oldPassword.trim()
-          )
-          await reauthenticateWithCredential(user, credentials)
-          await updatePassword(user, newPassword.trim())
+          const userDoc = await getDoc(doc(firestore, "users", storedUserId))
+          if (!userDoc.exists()) {
+            Toast.show("User not found", options)
+            return
+          }
 
+          const userEmail = userDoc.data().email
+
+          // Re-authenticate the user using their email and old password
+          const userCredential = await signInWithEmailAndPassword(
+            auth,
+            userEmail,
+            oldPassword
+          )
+
+          await updatePassword(userCredential.user, newPassword.trim())
           setOldPassword("")
           setNewPassword("")
           Toast.show("Password updated successfully", options)
-          router.replace("onboarding/tabs/profile/")
+          changesMade = true
         } catch (error) {
-          console.error("Error updating password:", error)
-          Toast.show(
-            error.code === "auth/wrong-password"
-              ? "Incorrect old password"
-              : "Weak password: Choose a stronger one",
-            options
-          )
+          let errorMessage = "Something went wrong. Please try again."
+
+          if (error.code === "auth/missing-password") {
+            errorMessage = "Password is required. Please enter your password."
+          } else if (error.code === "auth/invalid-credential") {
+            errorMessage =
+              "Invalid Old Password. Please Re-enter your Old Password."
+            setOldPassword("")
+          } else if (error.code === "auth/weak-password") {
+            errorMessage = "Password should be at least 6 characters."
+          }
+
+          Toast.show(errorMessage, options)
         }
+      }
+
+      if (changesMade) {
+        router.replace("onboarding/tabs/profile/")
       }
     } catch (error) {
       console.error("Error updating profile:", error)
@@ -155,6 +216,7 @@ const AppStore = ({ children }) => {
     router.replace("onboarding/tabs/profile/")
   }
 
+  // Handle expense/income submission
   const handleSubmit = async () => {
     try {
       if (!storedUserId) {
@@ -217,45 +279,15 @@ const AppStore = ({ children }) => {
       setSelected("")
       setDescription("")
       setAmount("")
-      setAmountLoading(false)
     } catch (error) {
-      console.log(error)
+      console.error(error)
       Toast.show(`Failed to add ${selectedType}`, options)
     } finally {
       setAmountLoading(false)
     }
   }
 
-  useEffect(() => {
-    fetchData()
-  }, [storedUserId])
-
-  const fetchData = async () => {
-    try {
-      if (!storedUserId) {
-        Toast.show("User ID is missing", options)
-        router.push("onboarding/login")
-        return
-      }
-
-      const userDoc = await getDoc(doc(firestore, "users", storedUserId))
-      if (userDoc.exists()) {
-        const userData = userDoc.data()
-        setUserIncome(userData.totalIncomeAmount)
-        setUserExpenses(userData.totalExpensesAmount)
-        setBudget(userData.budget)
-        const userDataExpenses = userData.expenses || []
-        setUserData(userDataExpenses)
-      } else {
-        Toast.show("User document does not exist", options)
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error)
-      Toast.show("Failed to load data", options)
-    }
-  }
-
-  //Budget
+  // Handle budget update
   const handleContinue = async () => {
     try {
       if (!storedUserId) {
@@ -263,15 +295,15 @@ const AppStore = ({ children }) => {
         router.push("onboarding/login")
         return
       }
-  
-      if (!budget || isNaN(budget) || budget <= 0 ) {
+
+      if (!budget || isNaN(budget) || budget <= 0) {
         Toast.show("Please enter a valid budget amount", options)
         return
       }
       setBudgetLoading(true)
       const userDocRef = doc(firestore, "users", storedUserId)
       const userDocSnap = await getDoc(userDocRef)
-  
+
       if (userDocSnap.exists()) {
         await updateDoc(userDocRef, { budget: Number(budget) })
         Toast.show("Budget updated successfully", options)
@@ -280,15 +312,28 @@ const AppStore = ({ children }) => {
         Toast.show("User document does not exist", options)
         router.back()
       }
-      setBudgetLoading(false)
     } catch (error) {
       console.error(error)
       Toast.show("Failed to set Budget", options)
-    }finally{
+    } finally {
       setBudgetLoading(false)
     }
   }
-  
+
+  const handleLogout = async () => {
+    try {
+      // Clear AsyncStorage
+      await auth.signOut()
+      await AsyncStorage.removeItem('loggedIn')
+      await AsyncStorage.clear()
+
+      setStoredUserId(null)
+      router.replace("onboarding/login")
+    } catch (error) {
+      console.error("Error during logout:", error)
+      Toast.show("Logout failed", options)
+    }
+  }
 
   return (
     <AppContext.Provider
@@ -298,6 +343,8 @@ const AppStore = ({ children }) => {
         options,
         refreshing,
         setRefreshing,
+        handleLogout,
+        setStoredUserId,
         // ACCOUNT TAB
         name,
         setName,
@@ -311,7 +358,7 @@ const AppStore = ({ children }) => {
         setNewPassword,
         newPassword,
 
-        //ADD EXPENSES/INCOME
+        // ADD EXPENSES/INCOME
         handleSubmit,
         selectedType,
         setSelectedType,
@@ -325,7 +372,7 @@ const AppStore = ({ children }) => {
         sIcon,
         setSIcon,
 
-        //FETCH USER DATA
+        // FETCH USER DATA
         userData,
         fetchData,
         userIncome,
@@ -336,7 +383,6 @@ const AppStore = ({ children }) => {
         handleContinue,
         setBudget,
         budgetLoading,
-
       }}
     >
       {children}

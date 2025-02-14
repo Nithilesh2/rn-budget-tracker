@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native"
-import React, {  useContext, useState } from "react"
-import {  useRouter } from "expo-router"
+import React, { useContext, useState } from "react"
+import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native"
 import { useFonts } from "expo-font"
 import {
@@ -20,24 +20,12 @@ import AccountIcon from "./../../../../assets/icons/Account"
 import SettingsIcon from "./../../../../assets/icons/Settings"
 import ExportIcon from "./../../../../assets/icons/Export"
 import LogoutIcon from "./../../../../assets/icons/Logout"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { AppContext } from "../../../../context/AppContext";
+import { AppContext } from "../../../../context/AppContext"
 
 const index = () => {
-  const { selectedIcon, name, email } = useContext(AppContext)
+  const { selectedIcon, name, email, handleLogout } = useContext(AppContext)
   const [showLogout, setShowLogout] = useState(false)
   const router = useRouter()
-  const handleLogout = async () => {
-    try {
-      await AsyncStorage.removeItem("loggedIn")
-      await AsyncStorage.removeItem("userId")
-      await AsyncStorage.removeItem("userName")
-      await AsyncStorage.removeItem("userEmail")
-      router.replace("onboarding/login")
-    } catch (error) {
-      console.error(error)
-    }
-  }
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -65,10 +53,7 @@ const index = () => {
           <View style={styles.top}>
             <View style={styles.topLeftContainer}>
               <View style={styles.userIconContainer}>
-                <Image
-                  source={selectedIcon}
-                  style={styles.userImg}
-                />
+                <Image source={selectedIcon} style={styles.userImg} />
               </View>
               <View style={styles.userNameContainer}>
                 <Text style={styles.userNameText}>{name}</Text>
@@ -180,7 +165,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
     paddingHorizontal: 10,
-    marginVertical: 20
+    marginVertical: 20,
   },
   topLeftContainer: {
     flexDirection: "row",
@@ -191,7 +176,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     padding: 5,
   },
-  userImg:{
+  userImg: {
     width: 100,
     height: 100,
     borderRadius: 50,

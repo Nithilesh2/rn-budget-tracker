@@ -41,10 +41,12 @@ const Budget = () => {
         <Text style={styles.monthText}>{monthName}</Text>
       </View>
       <View style={styles.budgetContainer}>
-        {budget === 0 ? (
+        {budget === 0 || budget === null || budget === undefined ? (
           <>
             <View style={styles.nobudgetContainer}>
-              <Text style={styles.nobudgetText}>No budget set for this month.</Text>
+              <Text style={styles.nobudgetText}>
+                No budget set for this month.
+              </Text>
               <Text style={styles.nobudgetText2}>
                 Let's make one so you are in control
               </Text>
@@ -63,19 +65,33 @@ const Budget = () => {
           <>
             <View style={styles.yesBudgetContainer}>
               <Text style={styles.yesbudgetText}>
-                Remaining ₹{Math.max(0, budget - userExpenses)}
+                Remaining ₹
+                {userExpenses === null ||
+                userExpenses === undefined ||
+                userExpenses === 0
+                  ? budget
+                  : `${Math.max(0, budget - userExpenses)}`}
               </Text>
 
               <View style={styles.progressBarContainer}>
                 <View
                   style={[
                     styles.progressBar,
-                    { width: `${Math.min(100, spentPercentage)}%`, backgroundColor: progressBarColor }
+                    {
+                      width: `${Math.min(100, spentPercentage)}%`,
+                      backgroundColor: progressBarColor,
+                    },
                   ]}
                 />
               </View>
               <Text style={styles.progressText}>
-                Spent: ₹{userExpenses} out of ₹{budget}
+                Spent: ₹
+                {userExpenses === null ||
+                userExpenses === undefined ||
+                userExpenses === 0
+                  ? 0
+                  : userExpenses}{" "}
+                out of ₹{budget}
               </Text>
             </View>
             <View style={styles.buttonContainer}>

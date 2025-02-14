@@ -1,49 +1,49 @@
-import React, { useContext, useState, useEffect } from "react";
-import { View, Text, Dimensions } from "react-native";
-import { LineChart } from "react-native-chart-kit";
-import { AppContext } from "../context/AppContext";
+import React, { useContext, useState, useEffect } from "react"
+import { View, Text, Dimensions } from "react-native"
+import { LineChart } from "react-native-chart-kit"
+import { AppContext } from "../context/AppContext"
 
 const SpendIncomeLineChart = () => {
-  const { userData } = useContext(AppContext);
-  const [selectedData, setSelectedData] = useState(null);
+  const { userData } = useContext(AppContext)
+  const [selectedData, setSelectedData] = useState(null)
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [{ data: [] }],
-  });
+  })
 
   const aggregateDataByDay = (data) => {
-    const dailyData = {};
+    const dailyData = {}
 
     data.forEach((entry) => {
       if (!entry.timestamp || !entry.timestamp.seconds) {
-        console.warn("Invalid timestamp in entry:", entry);
-        return;
+        console.warn("Invalid timestamp in entry:", entry)
+        return
       }
 
-      const date = new Date(entry.timestamp.seconds * 1000).toLocaleDateString();
+      const date = new Date(entry.timestamp.seconds * 1000).toLocaleDateString()
       if (!dailyData[date]) {
-        dailyData[date] = 0;
+        dailyData[date] = 0
       }
       if (entry.method === "Expense") {
-        dailyData[date] -= entry.amount;
+        dailyData[date] -= entry.amount
       } else if (entry.method === "Income") {
-        dailyData[date] += entry.amount;
+        dailyData[date] += entry.amount
       }
-    });
+    })
 
-    const labels = Object.keys(dailyData);
+    const labels = Object.keys(dailyData)
     const amounts = Object.values(dailyData).map((amount) => {
-      if (isNaN(amount)) return 0;
-      if (!isFinite(amount)) return 0; 
-      return amount;
-    });
+      if (isNaN(amount)) return 0
+      if (!isFinite(amount)) return 0
+      return amount
+    })
 
-    return { labels, amounts };
-  };
+    return { labels, amounts }
+  }
 
   useEffect(() => {
     if (userData && userData.length > 0) {
-      const aggregatedData = aggregateDataByDay(userData);
+      const aggregatedData = aggregateDataByDay(userData)
       setChartData({
         labels: aggregatedData.labels,
         datasets: [
@@ -53,14 +53,14 @@ const SpendIncomeLineChart = () => {
             color: () => "#7F3DFF",
           },
         ],
-      });
+      })
     } else {
       setChartData({
         labels: [],
         datasets: [{ data: [], strokeWidth: 5, color: () => "#7F3DFF" }],
-      });
+      })
     }
-  }, [userData]);
+  }, [userData])
 
   const chartConfig = {
     backgroundGradientFrom: "#FFFFFF",
@@ -76,16 +76,16 @@ const SpendIncomeLineChart = () => {
       strokeWidth: "2",
       stroke: "#ffa726",
     },
-  };
+  }
 
-  const screenWidth = Dimensions.get("window").width;
+  const screenWidth = Dimensions.get("window").width
 
   const handleDataPointClick = (data) => {
-    const { index } = data;
-    const day = chartData.labels[index];
-    const amount = chartData.datasets[0].data[index];
-    setSelectedData({ day, amount });
-  };
+    const { index } = data
+    const day = chartData.labels[index]
+    const amount = chartData.datasets[0].data[index]
+    setSelectedData({ day, amount })
+  }
 
   return (
     <View style={{ alignItems: "center", marginTop: 20 }}>
@@ -104,7 +104,9 @@ const SpendIncomeLineChart = () => {
           onDataPointClick={handleDataPointClick}
         />
       ) : (
-        <Text>No data available</Text>
+        <Text style={{ height: 50, fontSize: 16, color: '#aaaaaa', fontWeight: 'bold' }}>
+          No data yet. Start adding transactions!
+        </Text>
       )}
       {selectedData && (
         <View style={{ marginTop: 20 }}>
@@ -116,7 +118,7 @@ const SpendIncomeLineChart = () => {
         </View>
       )}
     </View>
-  );
-};
+  )
+}
 
-export default SpendIncomeLineChart;
+export default SpendIncomeLineChart

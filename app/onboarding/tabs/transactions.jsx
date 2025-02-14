@@ -7,9 +7,11 @@ import { format, isToday, isYesterday } from "date-fns"
 import { AppContext } from "../../../context/AppContext"
 import IconMap from "../../../assets/IconMap/IconMap"
 import data from "./../../../components/IconsData"
+import LottieView from "lottie-react-native"
 
 const Transactions = () => {
-  const { userData, refreshing, setRefreshing, fetchData } = useContext(AppContext)
+  const { userData, refreshing, setRefreshing, fetchData } =
+    useContext(AppContext)
   const [searchQuery, setSearchQuery] = useState("")
 
   useFonts({ Poppins_400Regular })
@@ -32,15 +34,22 @@ const Transactions = () => {
     return acc
   }, {})
 
-  const filteredTransactions = Object.entries(groupedTransactions).reduce((acc, [date, transactions]) => {
-    const filteredItems = transactions.filter(
-      (transaction) =>
-        transaction.categoryType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        transaction.description.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    if (filteredItems.length > 0) acc[date] = filteredItems
-    return acc
-  }, {})
+  const filteredTransactions = Object.entries(groupedTransactions).reduce(
+    (acc, [date, transactions]) => {
+      const filteredItems = transactions.filter(
+        (transaction) =>
+          transaction.categoryType
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          transaction.description
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
+      )
+      if (filteredItems.length > 0) acc[date] = filteredItems
+      return acc
+    },
+    {}
+  )
 
   const handleRefreshing = () => {
     setRefreshing(true)
@@ -50,71 +59,113 @@ const Transactions = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.middleContainer}>
-        <Searchbar
-          placeholder="Search for items..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={styles.searchContainer}
-          inputStyle={{ fontFamily: "Poppins_400Regular", paddingBottom: 5 }}
-        />
-      </View>
-
-      <FlatList
-        data={Object.entries(filteredTransactions)}
-        keyExtractor={(item) => item[0]}
-        refreshControl={<RefreshControl onRefresh={handleRefreshing} refreshing={refreshing} />}
-        renderItem={({ item }) => (
-          <>
-            <Text style={styles.dateTitle}>{item[0]}</Text>
-            <View style={styles.transactionContainer}>
-              {item[1].map((transaction, index) => {
-                const selectedItem = data.find((item) => item.value === transaction.categoryType)
-                return (
-                  <View key={index} style={styles.transactionItem}>
-                    {selectedItem && IconMap[selectedItem.icon]
-                      ? React.createElement(IconMap[selectedItem.icon], {
-                          height: 34,
-                          width: 34,
-                          color: selectedItem.color,
-                          fill: selectedItem.fill,
-                        })
-                      : null}
-                    <View style={styles.transactionDetails}>
-                      <Text style={styles.transactionTitle}>{transaction.categoryType}</Text>
-                      <Text style={styles.transactionDesc}>{transaction.description}</Text>
-                    </View>
-
-                    <View style={styles.moneyAndTimeContainer}>
-                      <Text
-                        style={[
-                          styles.transactionAmount,
-                          {
-                            color: transaction.method === "Income" ? "green" : "red",
-                          },
-                        ]}
-                      >
-                        {transaction.method === "Expense"
-                          ? `- ₹${transaction.amount}`
-                          : `+ ₹${transaction.amount}`}
-                      </Text>
-                      <Text style={styles.recentTransactionsItemTime}>
-                        {transaction.timestamp?.seconds
-                          ? new Date(transaction.timestamp.seconds * 1000).toLocaleTimeString("en-US", {
-                              hour: "numeric",
-                              minute: "2-digit",
-                              hour12: true,
+      {userData.length === 0 ? (
+        <>
+          <View style={styles.lottieContainer}>
+            <LottieView
+              source={require("../../../assets/Animations/noSpents.json")}
+              autoPlay
+              loop={true}
+              style={{ width: 360, height: 360, marginLeft: 5 }}
+            />
+            <Text style={styles.recentTransactionsNoSpendsText}>
+              No recent transactions. Add expenses/income to see them here.
+            </Text>
+            <LottieView
+              source={require("../../../assets/Animations/ArrowDown.json")}
+              autoPlay
+              loop={true}
+              style={{ width: 80, height: 80, position: 'absolute', bottom: 0, alignItems: 'center' }}
+            />
+          </View>
+        </>
+      ) : (
+        <>
+          <View style={styles.middleContainer}>
+            <Searchbar
+              placeholder="Search for items..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              style={styles.searchContainer}
+              inputStyle={{
+                fontFamily: "Poppins_400Regular",
+                paddingBottom: 5,
+              }}
+            />
+          </View>
+          <FlatList
+            data={Object.entries(filteredTransactions)}
+            keyExtractor={(item) => item[0]}
+            refreshControl={
+              <RefreshControl
+                onRefresh={handleRefreshing}
+                refreshing={refreshing}
+              />
+            }
+            renderItem={({ item }) => (
+              <>
+                <Text style={styles.dateTitle}>{item[0]}</Text>
+                <View style={styles.transactionContainer}>
+                  {item[1].map((transaction, index) => {
+                    const selectedItem = data.find(
+                      (item) => item.value === transaction.categoryType
+                    )
+                    return (
+                      <View key={index} style={styles.transactionItem}>
+                        {selectedItem && IconMap[selectedItem.icon]
+                          ? React.createElement(IconMap[selectedItem.icon], {
+                              height: 34,
+                              width: 34,
+                              color: selectedItem.color,
+                              fill: selectedItem.fill,
                             })
-                          : "N/A"}
-                      </Text>
-                    </View>
-                  </View>
-                )
-              })}
-            </View>
-          </>
-        )}
-      />
+                          : null}
+                        <View style={styles.transactionDetails}>
+                          <Text style={styles.transactionTitle}>
+                            {transaction.categoryType}
+                          </Text>
+                          <Text style={styles.transactionDesc}>
+                            {transaction.description}
+                          </Text>
+                        </View>
+
+                        <View style={styles.moneyAndTimeContainer}>
+                          <Text
+                            style={[
+                              styles.transactionAmount,
+                              {
+                                color:
+                                  transaction.method === "Income"
+                                    ? "green"
+                                    : "red",
+                              },
+                            ]}
+                          >
+                            {transaction.method === "Expense"
+                              ? `- ₹${transaction.amount}`
+                              : `+ ₹${transaction.amount}`}
+                          </Text>
+                          <Text style={styles.recentTransactionsItemTime}>
+                            {transaction.timestamp?.seconds
+                              ? new Date(
+                                  transaction.timestamp.seconds * 1000
+                                ).toLocaleTimeString("en-US", {
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                })
+                              : "N/A"}
+                          </Text>
+                        </View>
+                      </View>
+                    )
+                  })}
+                </View>
+              </>
+            )}
+          />
+        </>
+      )}
     </View>
   )
 }
@@ -125,6 +176,12 @@ const styles = StyleSheet.create({
   container: {
     paddingVertical: 20,
     flex: 1,
+    backgroundColor: "white",
+  },
+  lottieContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   middleContainer: {
     paddingVertical: 20,
@@ -192,5 +249,16 @@ const styles = StyleSheet.create({
     color: "grey",
     textAlign: "flex-start",
     overflow: "visible",
+  },
+  recentTransactionsNoSpendsText: {
+    fontFamily: "Poppins_500Medium",
+    fontSize: 18,
+    color: "black",
+    textAlign: "center",
+    marginTop: 20,
+    width: "100%",
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    overflow: "scroll",
   },
 })

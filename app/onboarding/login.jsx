@@ -25,7 +25,7 @@ import { doc, getDoc } from "firebase/firestore"
 import { AppContext } from "../../context/AppContext"
 
 const login = () => {
-  const { options } = useContext(AppContext)
+  const { options, setStoredUserId } = useContext(AppContext)
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -65,6 +65,7 @@ const login = () => {
             const userData = userDoc.data()
             await AsyncStorage.setItem("loggedIn", "true")
             await AsyncStorage.setItem("userId", userData.uid)
+            setStoredUserId(userData.uid)
             await AsyncStorage.setItem("userName", userData.name)
             await AsyncStorage.setItem("userEmail", userData.email)
 

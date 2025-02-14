@@ -20,7 +20,6 @@ import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import { auth, firestore } from "../../../firebase/firebaseConfig"
 import { doc, getDoc, setDoc } from "firebase/firestore"
 import Toast from "react-native-root-toast"
-import { duration } from "moment";
 import { AppContext } from "../../../context/AppContext";
 
 const PinLockScreen = () => {
@@ -45,11 +44,6 @@ const PinLockScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
-      const user = auth.currentUser
-      if (!user) {
-        Toast.show("Please log in again.", options)
-        router.replace("onboarding/login")
-      }
       checkExistingPin()
     }, [])
   )

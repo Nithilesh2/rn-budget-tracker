@@ -24,6 +24,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import { AppContext } from "../../../context/AppContext"
 import IconMap from "../../../assets/IconMap/IconMap"
 import data from "../../../components/IconsData"
+import LottieView from "lottie-react-native"
 
 const index = () => {
   const {
@@ -33,9 +34,10 @@ const index = () => {
     userExpenses,
     refreshing,
     setRefreshing,
-    budget
+    budget,
+    selectedIcon,
+    setStoredUserId,
   } = useContext(AppContext)
-  const [selectedIcon, setSelectedIcon] = useState(1)
   const router = useRouter()
   const date = new Date()
   const options = { month: "long" }
@@ -48,17 +50,18 @@ const index = () => {
 
   useFocusEffect(
     useCallback(() => {
-      const loadIcon = async () => {
+      const loadData = async () => {
         try {
-          const storedIcon = await AsyncStorage.getItem("selectedIcon")
-          if (storedIcon) {
-            setSelectedIcon(storedIcon)
+          const userId = await AsyncStorage.getItem("userId")
+          if (userId) {
+            setStoredUserId(userId)
+            fetchData()
           }
         } catch (error) {
-          console.log("Error loading icon:", error)
+          console.error("Error loading data:", error)
         }
       }
-      loadIcon()
+      loadData()
     }, [])
   )
   const handleRefreshing = () => {
@@ -87,7 +90,7 @@ const index = () => {
         >
           <View style={styles.top}>
             <View style={styles.topLeft}>
-              <Image source={icons[selectedIcon]} style={styles.userImg} />
+              <Image source={selectedIcon} style={styles.userImg} />
             </View>
             <View style={styles.topMiddle}>
               <Text style={styles.monethSpents}>{monthName}</Text>
@@ -104,7 +107,21 @@ const index = () => {
           </View>
           <View style={styles.accBal}>
             <Text style={styles.accBaltext}>Monthly Budget</Text>
-            <Text style={styles.accBalAmount}>₹{budget}</Text>
+            <Text style={styles.accBalAmount}>
+              {budget === undefined || budget === null || budget === 0 ? (
+                <View style={styles.setBudget}>
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    style={styles.setBudgetButton}
+                    onPress={() => router.push("/onboarding/tabs/budget")}
+                  >
+                    <Text style={styles.setBudgetButtonText}>Set Budget</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                `₹${budget}`
+              )}
+            </Text>
           </View>
           <View style={styles.spentsDebitAndCredit}>
             <View style={styles.creditBox}>
@@ -114,7 +131,14 @@ const index = () => {
               />
               <View style={styles.boxRight}>
                 <Text style={styles.boxRightText}>Income</Text>
-                <Text style={styles.boxRightAmount}>₹{userIncome}</Text>
+                <Text style={styles.boxRightAmount}>
+                  ₹
+                  {userIncome === undefined ||
+                  userIncome === null ||
+                  userIncome === 0
+                    ? "0"
+                    : `${userIncome}`}
+                </Text>
               </View>
             </View>
             <View style={styles.debitBox}>
@@ -124,7 +148,14 @@ const index = () => {
               />
               <View style={styles.creditBoxRight}>
                 <Text style={styles.boxRightText}>Expenses</Text>
-                <Text style={styles.boxRightAmount}>₹{userExpenses}</Text>
+                <Text style={styles.boxRightAmount}>
+                  ₹
+                  {userExpenses === undefined ||
+                  userExpenses === null ||
+                  userExpenses === 0
+                    ? "0"
+                    : userExpenses}
+                </Text>
               </View>
             </View>
           </View>
@@ -136,72 +167,110 @@ const index = () => {
             <Text style={styles.recentTransicitionsText}>
               Recent Transactions
             </Text>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={styles.recentTransicitionsButton}
-              onPress={() => router.push("/onboarding/tabs/transactions")}
-            >
-              <Text style={styles.recentTransicitionsButtonText}>See All</Text>
-            </TouchableOpacity>
+            {userData && userData.length > 0 ? (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={styles.recentTransicitionsButton}
+                onPress={() => router.push("/onboarding/tabs/transactions")}
+              >
+                <Text style={styles.recentTransicitionsButtonText}>
+                  See All
+                </Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
-          <View style={styles.recentTransactionsList}>
-            {[...userData]
-              .sort(
-                (a, b) =>
-                  (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)
-              )
-              .map((transaction, index) => {
-                const selectedItem = data.find(
-                  (item) => item.value === transaction.categoryType
-                )
-                return (
-                  <View key={index} style={styles.recentTransactionsItem}>
-                    {selectedItem && IconMap[selectedItem.icon]
-                      ? React.createElement(IconMap[selectedItem.icon], {
-                          height: 34,
-                          width: 34,
-                          color: selectedItem.color,
-                          fill: selectedItem.fill,
-                        })
-                      : null}
-                    <View style={styles.recentTransactionsItemMiddle}>
-                      <Text style={styles.recentTransactionsItemText}>
-                        {transaction.categoryType}
-                      </Text>
-                      <Text style={styles.recentTransactionsItemDescription}>
-                        {transaction.description}
-                      </Text>
-                    </View>
-                    <View style={styles.recentTransactionsItemBottom}>
-                      <Text
-                        style={[
-                          styles.recentTransactionsItemAmount,
-                          {
-                            color:
-                              transaction.method === "Income" ? "green" : "red",
-                          },
-                        ]}
-                      >
-                        {transaction.method === "Expense"
-                          ? `- ₹${transaction.amount}`
-                          : `+ ₹${transaction.amount}`}
-                      </Text>
-                      <Text style={styles.recentTransactionsItemTime}>
-                        {transaction.timestamp?.seconds
-                          ? new Date(
-                              transaction.timestamp.seconds * 1000
-                            ).toLocaleTimeString("en-US", {
-                              hour: "numeric",
-                              minute: "2-digit",
-                              hour12: true,
+          {userData.length === 0 ? (
+            <>
+              <View
+                style={{
+                  alignItems: "center",
+                  flex: 1,
+                  justifyContent: "center",
+                }}
+              >
+                <LottieView
+                  source={require("../../../assets/Animations/noSpents.json")}
+                  autoPlay
+                  loop={true}
+                  style={{ width: 300, height: 300 }}
+                />
+                <Text style={styles.recentTransactionsNoSpendsText}>
+                  No recent transactions. Add expenses/income to see them here.
+                </Text>
+                <LottieView
+                  source={require("../../../assets/Animations/ArrowDown.json")}
+                  autoPlay
+                  loop={true}
+                  style={{ width: 80, height: 80 }}
+                />
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.recentTransactionsList}>
+                {[...userData]
+                  .sort(
+                    (a, b) =>
+                      (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)
+                  ).slice(0,5)
+                  .map((transaction, index) => {
+                    const selectedItem = data.find(
+                      (item) => item.value === transaction.categoryType
+                    )
+                    return (
+                      <View key={index} style={styles.recentTransactionsItem}>
+                        {selectedItem && IconMap[selectedItem.icon]
+                          ? React.createElement(IconMap[selectedItem.icon], {
+                              height: 34,
+                              width: 34,
+                              color: selectedItem.color,
+                              fill: selectedItem.fill,
                             })
-                          : "N/A"}
-                      </Text>
-                    </View>
-                  </View>
-                )
-              })}
-          </View>
+                          : null}
+                        <View style={styles.recentTransactionsItemMiddle}>
+                          <Text style={styles.recentTransactionsItemText}>
+                            {transaction.categoryType}
+                          </Text>
+                          <Text
+                            style={styles.recentTransactionsItemDescription}
+                          >
+                            {transaction.description}
+                          </Text>
+                        </View>
+                        <View style={styles.recentTransactionsItemBottom}>
+                          <Text
+                            style={[
+                              styles.recentTransactionsItemAmount,
+                              {
+                                color:
+                                  transaction.method === "Income"
+                                    ? "green"
+                                    : "red",
+                              },
+                            ]}
+                          >
+                            {transaction.method === "Expense"
+                              ? `- ₹${transaction.amount}`
+                              : `+ ₹${transaction.amount}`}
+                          </Text>
+                          <Text style={styles.recentTransactionsItemTime}>
+                            {transaction.timestamp?.seconds
+                              ? new Date(
+                                  transaction.timestamp.seconds * 1000
+                                ).toLocaleTimeString("en-US", {
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                })
+                              : "N/A"}
+                          </Text>
+                        </View>
+                      </View>
+                    )
+                  })}
+              </View>
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
     </>
@@ -270,8 +339,36 @@ const styles = StyleSheet.create({
     textAlign: "center",
     overflow: "visible",
     width: "100%",
-    textAlign: "center",
-    overflow: "visible",
+  },
+  setBudget: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    marginTop: 10,
+  },
+  setBudgetText: {
+    fontFamily: "Poppins_500Medium",
+    fontSize: 18,
+    color: "grey",
+  },
+  setBudgetButton: {
+    backgroundColor: "#7F3DFF",
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    height: 40,
+    marginVertical: 5,
+  },
+  setBudgetButtonText: {
+    fontFamily: "Poppins_500Medium",
+    fontSize: 16,
+    color: "white",
   },
   spentsDebitAndCredit: {
     flexDirection: "row",
@@ -434,6 +531,17 @@ const styles = StyleSheet.create({
     width: "100%",
     textAlign: "flex-start",
     overflow: "visible",
+  },
+  recentTransactionsNoSpendsText: {
+    fontFamily: "Poppins_500Medium",
+    fontSize: 18,
+    color: "black",
+    textAlign: "center",
+    // marginTop: 20,
+    width: "100%",
+    // marginBottom: 20,
+    paddingHorizontal: 10,
+    overflow: "scroll",
   },
 })
 
