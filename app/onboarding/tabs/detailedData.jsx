@@ -6,6 +6,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native"
 import React, { useContext, useState } from "react"
 import { useLocalSearchParams, useRouter } from "expo-router"
@@ -19,9 +20,21 @@ import {
 } from "@expo-google-fonts/poppins"
 import { useFonts } from "expo-font"
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
+import { doc, getDoc, updateDoc } from "firebase/firestore"
+import { firestore } from "../../../firebase/firebaseConfig"
+import Toast from "react-native-root-toast"
+import { useEffect } from "react"
+import Modal from "react-native-modal"
 
 const DetailedData = () => {
-  const { userData } = useContext(AppContext)
+  const {
+    userData,
+    storedUserId,
+    options,
+    handleDeleteTransaction,
+    setModalVisible,
+    isModalVisible,
+  } = useContext(AppContext)
   const { id } = useLocalSearchParams()
   const router = useRouter()
 
@@ -45,6 +58,7 @@ const DetailedData = () => {
   }
 
   const [isEditing, setIsEditing] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [description, setDescription] = useState(transaction.description || "")
 
   const formattedDate = new Date(
@@ -79,6 +93,41 @@ const DetailedData = () => {
     day + suffix
   )} ${formattedTime}`
 
+  const updateTransaction = async () => {
+    try {
+      setLoading(true)
+      const userDocRef = doc(firestore, "users", storedUserId)
+      const userDocSnap = await getDoc(userDocRef)
+
+      if (userDocSnap.exists()) {
+        let expenses = userDocSnap.data().expenses || []
+
+        const index = expenses.findIndex((expense) => expense.id === id)
+        if (index !== -1) {
+          expenses[index] = {
+            ...expenses[index],
+            description: description,
+          }
+          await updateDoc(userDocRef, { expenses })
+
+          setIsEditing(false)
+        } else {
+          Toast.show("Transaction not found", options)
+          console.error("Transaction not found")
+        }
+      }
+      setLoading(false)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+  useEffect(() => {
+    setDescription(transaction.description || "")
+    setIsEditing(false)
+  }, [transaction])
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -96,7 +145,12 @@ const DetailedData = () => {
             />
 
             <Text style={styles.title}>Detailed Transaction</Text>
-            <Dustbin height={30} width={30} color="white" fill="none" />
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => setModalVisible(true)}
+            >
+              <Dustbin height={30} width={30} color="white" fill="none" />
+            </TouchableOpacity>
           </View>
           <View style={styles.bottom}>
             <View style={styles.bTop}>
@@ -135,7 +189,7 @@ const DetailedData = () => {
               <TextInput
                 style={styles.descTextInput}
                 value={description}
-                onChangeText={setDescription}
+                onChangeText={(text) => setDescription(text)}
                 placeholder="Enter description..."
                 multiline
               />
@@ -149,13 +203,62 @@ const DetailedData = () => {
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.editContainerBox}
-            onPress={() => setIsEditing(!isEditing)}
+            onPress={() => {
+              if (isEditing) {
+                updateTransaction()
+              } else {
+                setIsEditing(true)
+              }
+            }}
           >
             <Text style={styles.buttonText}>
-              {isEditing ? "Save" : "Edit Transaction"}
+              {isEditing ? (
+                loading ? (
+                  <ActivityIndicator size="large" color="white" />
+                ) : (
+                  "Save"
+                )
+              ) : (
+                "Edit Transaction"
+              )}
             </Text>
           </TouchableOpacity>
         </View>
+        <Modal
+          isVisible={isModalVisible}
+          onBackdropPress={() => setModalVisible(false)}
+          onSwipeComplete={() => setModalVisible(false)}
+          swipeDirection="down"
+          style={styles.modal}
+          backdropOpacity={0.5}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTextOne}>Remove this transaction?</Text>
+            <Text style={styles.modalText}>
+              Are you sure you want to delete this transaction?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>No</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={() => {
+                  handleDeleteTransaction(id)
+                  setModalVisible(false)
+                }}
+              >
+                <Text style={[styles.modalButtonText, { color: "white" }]}>
+                  Yes
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </KeyboardAvoidingView>
   )
@@ -321,5 +424,65 @@ const styles = StyleSheet.create({
   goBackText: {
     fontSize: 16,
     color: "blue",
+  },
+  modal: {
+    justifyContent: "flex-end",
+    margin: 0,
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    paddingTop: 50,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    alignItems: "center",
+  },
+  modalHandle: {
+    width: 50,
+    height: 5,
+    backgroundColor: "#ccc",
+    borderRadius: 10,
+    marginBottom: 10,
+    position: "absolute",
+    top: 20,
+  },
+  modalTextOne: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
+    fontWeight: "bold",
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
+    paddingBottom: 2,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  modalButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    flex: 1,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    backgroundColor: "#ccc",
+  },
+  confirmButton: {
+    backgroundColor: "#7F3DFF",
+  },
+  modalButtonText: {
+    fontSize: 18,
+    color: "#7F3DFF",
+    fontWeight: "bold",
   },
 })

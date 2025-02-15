@@ -7,7 +7,7 @@ import icons from "../components/Icons"
 import Toast from "react-native-root-toast"
 import { useRouter } from "expo-router"
 import { signInWithEmailAndPassword, updatePassword } from "firebase/auth"
-import 'react-native-get-random-values';
+import "react-native-get-random-values"
 import { v4 as uuidv4 } from "uuid"
 
 const AppStore = ({ children }) => {
@@ -39,6 +39,9 @@ const AppStore = ({ children }) => {
   // Budget
   const [budget, setBudget] = useState(0)
   const [budgetLoading, setBudgetLoading] = useState(false)
+
+  // Delete particular transaction
+  const [isModalVisible, setModalVisible] = useState(false)
 
   // Toast configuration
   const options = {
@@ -341,6 +344,34 @@ const AppStore = ({ children }) => {
     }
   }
 
+  // Delete particular Transaction throush transaction id
+  const handleDeleteTransaction = async (transactionId) => {
+    try {
+      // if (!storedUserId) {
+      //   console.log("User ID not found")
+      //   return
+      // }
+      // const userRef = doc(firestore, "users", storedUserId)
+      // const userDoc = await getDoc(userRef)
+
+      // if (!userDoc.exists()) {
+      //   console.log("User document not found")
+      //   return
+      // }
+      // const userData = userDoc.data()
+      // const updatedExpenses = userData.expenses.filter(
+      //   (expense) => expense.id !== transactionId
+      // )
+      // await updateDoc(userRef, {
+      //   expenses: updatedExpenses,
+      // })
+      // router.push('onboarding/tabs/transactions')
+      Toast.show('Transaction cannot be deleted this time', options)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   return (
     <AppContext.Provider
       value={{
@@ -351,6 +382,7 @@ const AppStore = ({ children }) => {
         setRefreshing,
         handleLogout,
         setStoredUserId,
+        storedUserId,
         // ACCOUNT TAB
         name,
         setName,
@@ -389,6 +421,11 @@ const AppStore = ({ children }) => {
         handleContinue,
         setBudget,
         budgetLoading,
+
+        // DELETE TRANSACTION
+        handleDeleteTransaction,
+        isModalVisible,
+        setModalVisible,
       }}
     >
       {children}
