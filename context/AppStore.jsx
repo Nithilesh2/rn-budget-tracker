@@ -7,6 +7,8 @@ import icons from "../components/Icons"
 import Toast from "react-native-root-toast"
 import { useRouter } from "expo-router"
 import { signInWithEmailAndPassword, updatePassword } from "firebase/auth"
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from "uuid"
 
 const AppStore = ({ children }) => {
   const [refreshing, setRefreshing] = useState(false)
@@ -138,7 +140,9 @@ const AppStore = ({ children }) => {
 
       let changesMade = false
 
-      const iconIndex = selectedIcon ? icons.indexOf(JSON.parse(selectedIcon)) : -1;
+      const iconIndex = selectedIcon
+        ? icons.indexOf(JSON.parse(selectedIcon))
+        : -1
       if (userDoc.userIconNumber !== iconIndex) {
         await updateDoc(userDocRef, { userIconNumber: iconIndex })
         await AsyncStorage.setItem("selectedIcon", JSON.stringify(iconIndex))
@@ -245,6 +249,7 @@ const AppStore = ({ children }) => {
       const previousTotalIncomeAmount = userData.totalIncomeAmount || 0
 
       const numericAmount = Number(amount)
+      const transactionId = uuidv4()
 
       const updatedTotalExpensesAmount =
         selectedType === "Expense"
@@ -259,6 +264,7 @@ const AppStore = ({ children }) => {
       const updatedExpenses = [
         ...previousExpenses,
         {
+          id: transactionId,
           method: selectedType,
           categoryType: selected,
           description: description.trim(),
@@ -324,7 +330,7 @@ const AppStore = ({ children }) => {
     try {
       // Clear AsyncStorage
       await auth.signOut()
-      await AsyncStorage.removeItem('loggedIn')
+      await AsyncStorage.removeItem("loggedIn")
       await AsyncStorage.clear()
 
       setStoredUserId(null)

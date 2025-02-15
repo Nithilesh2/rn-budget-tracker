@@ -1,4 +1,11 @@
-import { StyleSheet, Text, View, FlatList, RefreshControl } from "react-native"
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+} from "react-native"
 import React, { useContext, useState } from "react"
 import { Searchbar } from "react-native-paper"
 import { useFonts } from "expo-font"
@@ -8,11 +15,13 @@ import { AppContext } from "../../../context/AppContext"
 import IconMap from "../../../assets/IconMap/IconMap"
 import data from "./../../../components/IconsData"
 import LottieView from "lottie-react-native"
+import { useRouter } from "expo-router";
 
 const Transactions = () => {
   const { userData, refreshing, setRefreshing, fetchData } =
     useContext(AppContext)
   const [searchQuery, setSearchQuery] = useState("")
+  const router = useRouter()
 
   useFonts({ Poppins_400Regular })
 
@@ -75,7 +84,13 @@ const Transactions = () => {
               source={require("../../../assets/Animations/ArrowDown.json")}
               autoPlay
               loop={true}
-              style={{ width: 80, height: 80, position: 'absolute', bottom: 0, alignItems: 'center' }}
+              style={{
+                width: 80,
+                height: 80,
+                position: "absolute",
+                bottom: 0,
+                alignItems: "center",
+              }}
             />
           </View>
         </>
@@ -106,12 +121,17 @@ const Transactions = () => {
               <>
                 <Text style={styles.dateTitle}>{item[0]}</Text>
                 <View style={styles.transactionContainer}>
-                  {item[1].map((transaction, index) => {
+                  {item[1].map((transaction) => {
                     const selectedItem = data.find(
                       (item) => item.value === transaction.categoryType
                     )
                     return (
-                      <View key={index} style={styles.transactionItem}>
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        key={transaction.id}
+                        style={styles.transactionItem}
+                        onPress={() => router.push(`onboarding/tabs/detailedData?id=${transaction.id}`)}
+                      >
                         {selectedItem && IconMap[selectedItem.icon]
                           ? React.createElement(IconMap[selectedItem.icon], {
                               height: 34,
@@ -124,7 +144,7 @@ const Transactions = () => {
                           <Text style={styles.transactionTitle}>
                             {transaction.categoryType}
                           </Text>
-                          <Text style={styles.transactionDesc}>
+                          <Text style={styles.transactionDesc} numberOfLines={1}>
                             {transaction.description}
                           </Text>
                         </View>
@@ -157,7 +177,7 @@ const Transactions = () => {
                               : "N/A"}
                           </Text>
                         </View>
-                      </View>
+                      </TouchableOpacity>
                     )
                   })}
                 </View>

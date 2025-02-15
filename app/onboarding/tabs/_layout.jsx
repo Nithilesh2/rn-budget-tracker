@@ -172,6 +172,12 @@ const _layout = () => {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="detailedData"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   )
 }
