@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "530748282534",
+    "firebase_url": "https://budget-tracker-24-default-rtdb.firebaseio.com",
+    "project_id": "budget-tracker-24",
+    "storage_bucket": "budget-tracker-24.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:530748282534:android:eee7e1be5502ea75c40667",
+        "android_client_info": {
+          "package_name": "com.nithilesh.budgettracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "530748282534-oj42e5juom0jmuvuaala37hv064thi27.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5ZJBQ9v_by8bpWnx1hasO57D_9RkU0iQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "530748282534-b0j7u0dp2s2274k9pjau8hokevbmbors.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -20,7 +20,7 @@ import { AppContext } from "../../../../context/AppContext"
 import { ActivityIndicator } from "react-native"
 
 const setBudget = () => {
-  const { options, handleContinue, setBudget, budget, budgetLoading } =
+  const { options, handleContinue, setBudget, budgetLoading } =
     useContext(AppContext)
   const router = useRouter()
   useFonts({
@@ -57,15 +57,14 @@ const setBudget = () => {
             style={styles.amountInput}
             keyboardType="numeric"
             placeholderTextColor="white"
-            value={budget}
             maxLength={7}
             onChangeText={(text) => {
-              // let numericValue = text.replace(/[^0-9]/g, "")
-              // if (numericValue === "") {
-                // setBudget("")
-              // } else {
+              let numericValue = text.replace(/[^0-9]/g, "")
+              if (numericValue === "") {
+                setBudget("")
+              } else {
                 setBudget(text)
-              // }
+              }
             }}
           />
         </View>

@@ -36,3 +36,5 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+firebase/budget-tracker-24-5b748d0eaf3e.json

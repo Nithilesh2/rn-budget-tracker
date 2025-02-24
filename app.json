@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0C1A34"
       },
-      "package": "com.nithilesh.budgettracker"
+      "package": "com.nithilesh.budgettracker",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",

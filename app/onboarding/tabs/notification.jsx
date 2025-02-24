@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native"
-import React, { useState } from "react"
+import React, { useContext, useState, useEffect } from "react"
 import { SafeAreaView } from "react-native"
 import ArrowLeftIcon from "../../../assets/icons/ArrowLeft"
 import { useFonts } from "expo-font"
@@ -18,9 +18,14 @@ import {
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import MenuIcon from "../../../assets/icons/Menu"
 import LottieView from "lottie-react-native"
-import { useRouter } from "expo-router";
+import { useRouter } from "expo-router"
+import { AppContext } from "../../../context/AppContext"
+import { doc, updateDoc, getDoc } from "firebase/firestore"
+import { firestore } from "../../../firebase/firebaseConfig"
 
 const Notification = () => {
+  const { notifications, storedUserId, setNotifications } =
+    useContext(AppContext)
   const [menuVisible, setMenuVisible] = useState(false)
   const router = useRouter()
 
@@ -30,6 +35,99 @@ const Notification = () => {
     Ubuntu_500Medium,
   })
 
+  const handleMarkAllAsRead = async () => {
+    try {
+      const userDocRef = doc(firestore, "users", storedUserId)
+      const updatedNotifications = notifications.map((notification) => ({
+        ...notification,
+        read: true,
+      }))
+      await updateDoc(userDocRef, { notifications: updatedNotifications })
+      setNotifications(updatedNotifications)
+      setMenuVisible(false)
+    } catch (error) {
+      console.error("Error marking all as read:", error)
+    }
+  }
+
+  const handleRemoveAll = async () => {
+    try {
+      const userDocRef = doc(firestore, "users", storedUserId)
+      await updateDoc(userDocRef, { notifications: [] })
+      setNotifications([])
+      setMenuVisible(false)
+    } catch (error) {
+      console.error("Error removing all notifications:", error)
+    }
+  }
+
+  const handleMarkAsRead = async (id) => {
+    try {
+      const userDocRef = doc(firestore, "users", storedUserId)
+      const updatedNotifications = notifications.map((notification) =>
+        notification.id === id ? { ...notification, read: true } : notification
+      )
+      await updateDoc(userDocRef, { notifications: updatedNotifications })
+      setNotifications(updatedNotifications)
+    } catch (error) {
+      console.error("Error marking notification as read:", error)
+    }
+  }
+
+  const renderNotificationItem = ({ item }) => {
+    const notificationDate = item.timestamp?.toDate
+      ? item.timestamp.toDate().toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "Unknown date"
+
+    const notificationTime = item.timestamp?.toDate
+      ? item.timestamp.toDate().toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })
+      : "Unknown time"
+
+    return (
+      <TouchableOpacity
+        style={styles.notificationBox}
+        onPress={() => handleMarkAsRead(item.id)}
+      >
+        <View style={styles.notificationContent}>
+          <Text
+            style={[
+              styles.notificationTextMain,
+              {
+                fontWeight: item.read ? "normal" : "bold",
+                color: item.read ? "#666" : "black",
+              },
+            ]}
+          >
+            {item.type}
+          </Text>
+          <Text
+            style={[
+              styles.notificationTextSub,
+              {
+                fontWeight: item.read ? "normal" : "bold",
+                color: item.read ? "#666" : "black",
+              },
+            ]}
+          >
+            {item.message}
+          </Text>
+        </View>
+        <View style={styles.time}>
+          <Text style={styles.timeText}>{notificationTime}</Text>
+          <Text style={styles.timeText}>{notificationDate}</Text>
+        </View>
+      </TouchableOpacity>
+    )
+  }
+
   if (!fontsLoaded) {
     return (
       <View style={styles.loadingContainer}>
@@ -37,88 +135,6 @@ const Notification = () => {
       </View>
     )
   }
-
-  const [notifications, setNotifications] = useState([
-    {
-      id: "1",
-      title: "New expense added.",
-      description: "You have to pay for the Groceries",
-      time: "19:00",
-      read: false,
-    },
-    {
-      id: "2",
-      title: "Subscription due!",
-      description: "Netflix subscription renewal today.",
-      time: "12:30",
-      read: true,
-    },
-    {
-      id: "3",
-      title: "Salary credited!",
-      description: "Your monthly salary has been credited.",
-      time: "09:00",
-      read: false,
-    },
-  ])
-
-  const handleMarkAllAsRead = () => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((notification) => ({
-        ...notification,
-        read: true,
-      }))
-    )
-    setMenuVisible(false)
-  }
-
-  const handleRemoveAll = () => {
-    setNotifications([])
-    setMenuVisible(false)
-  }
-
-  const handleMarkAsRead = (id) => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((notification) =>
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    )
-  }
-
-  const renderNotificationItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.notificationBox}
-      onPress={() => handleMarkAsRead(item.id)}
-    >
-      <View style={styles.notificationContent}>
-        <Text
-          style={[
-            styles.notificationTextMain,
-            {
-              fontWeight: item.read ? "normal" : "bold",
-              color: item.read ? "#666" : "black",
-            },
-          ]}
-        >
-          {item.title}
-        </Text>
-        <Text
-          style={[
-            styles.notificationTextSub,
-            {
-              fontWeight: item.read ? "normal" : "bold",
-              color: item.read ? "#666" : "black",
-            },
-          ]}
-        >
-          {item.description}
-        </Text>
-      </View>
-      <View style={styles.time}>
-        <Text style={styles.timeText}>{item.time}</Text>
-      </View>
-    </TouchableOpacity>
-  )
 
   return (
     <>
@@ -168,9 +184,7 @@ const Notification = () => {
                   loop={true}
                   style={{ width: 350, height: 350 }}
                 />
-                <Text
-                  style={styles.noNewNotificationsText}
-                >
+                <Text style={styles.noNewNotificationsText}>
                   No new Notifications.
                 </Text>
               </View>
@@ -241,10 +255,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     width: "100%",
   },
-  notificationContainer: {
-    paddingHorizontal: 15,
-    paddingVertical: 20,
-  },
   notificationBox: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -290,6 +300,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
     textAlign: "center",
-    overflow: 'visible'
-  }
+    overflow: "visible",
+  },
 })

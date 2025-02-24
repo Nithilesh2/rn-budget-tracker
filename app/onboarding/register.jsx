@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native"
-import React, { useContext, useEffect, useState } from "react"
+import React, { useContext, useState } from "react"
 import EyeCloseIcon from "./../../assets/icons/EyeClose"
 import EyeOpenIcon from "./../../assets/icons/EyeOpen"
 import { useRouter } from "expo-router"

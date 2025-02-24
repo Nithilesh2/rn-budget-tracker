@@ -9,7 +9,7 @@ import { useRouter } from "expo-router"
 import { signInWithEmailAndPassword, updatePassword } from "firebase/auth"
 import "react-native-get-random-values"
 import { v4 as uuidv4 } from "uuid"
-import notifications from "../app/utils/notifications"
+// import notifications from "../app/utils/notifications"
 
 const AppStore = ({ children }) => {
   const [refreshing, setRefreshing] = useState(false)
@@ -24,6 +24,7 @@ const AppStore = ({ children }) => {
   const [oldPassword, setOldPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [accountLoading, setAccountLoading] = useState(false)
+  const [notifications, setNotifications] = useState([])
 
   // Add Expenses/Income
   const [selectedType, setSelectedType] = useState("Expense")
@@ -78,7 +79,8 @@ const AppStore = ({ children }) => {
         const userData = userDoc.data()
         setUserIncome(userData.totalIncomeAmount)
         setUserExpenses(userData.totalExpensesAmount)
-        setBudget(userData.budget)
+        setBudget(userData.budget || 0);
+        setNotifications(userData.notifications || []);
         const userDataExpenses = userData.expenses || []
         setUserData(userDataExpenses)
       } else {
@@ -138,84 +140,108 @@ const AppStore = ({ children }) => {
   const handleUpdate = async () => {
     try {
       if (!storedUserId) {
-        Toast.show("User not found", options)
-        return
+        Toast.show("User not found", options);
+        return;
       }
-      setAccountLoading(true)
-      const userDocRef = doc(firestore, "users", storedUserId)
-      const userDoc = (await getDoc(userDocRef)).data()
-
-      let changesMade = false
-
+      setAccountLoading(true);
+      const userDocRef = doc(firestore, "users", storedUserId);
+      const userDoc = (await getDoc(userDocRef)).data();
+  
+      let changesMade = false;
+      const notifications = userDoc.notifications || [];
+  
       const iconIndex = selectedIcon
         ? icons.indexOf(JSON.parse(selectedIcon))
-        : -1
+        : -1;
+  
       if (userDoc.userIconNumber !== iconIndex) {
-        await updateDoc(userDocRef, { userIconNumber: iconIndex })
-        await AsyncStorage.setItem("selectedIcon", JSON.stringify(iconIndex))
-        Toast.show("Icon updated successfully", options)
-        changesMade = true
+        await updateDoc(userDocRef, { userIconNumber: iconIndex });
+        await AsyncStorage.setItem("selectedIcon", JSON.stringify(iconIndex));
+        Toast.show("Icon updated successfully", options);
+  
+        notifications.push({
+          id: uuidv4(),
+          type: "Profile Update",
+          message: "Your profile icon has been updated.",
+          timestamp: new Date(),
+        });
+        changesMade = true;
       }
-
+  
       if (name.trim() !== userDoc.name) {
         if (name.trim()) {
-          await updateDoc(userDocRef, { name: name.trim() })
-          await AsyncStorage.setItem("userName", name.trim())
-          Toast.show("Name updated successfully", options)
-          changesMade = true
-        }
-        if (!name.trim()) {
-          Toast.show("Name cannot be empty", options)
-          return
+          await updateDoc(userDocRef, { name: name.trim() });
+          await AsyncStorage.setItem("userName", name.trim());
+          Toast.show("Name updated successfully", options);
+  
+          notifications.push({
+            id: uuidv4(),
+            type: "Profile Update",
+            message: `Your profile name has been updated to "${name.trim()}".`,
+            timestamp: new Date(),
+          });
+          changesMade = true;
+        } else {
+          Toast.show("Name cannot be empty", options);
+          return;
         }
       }
-
+  
       if (newPassword.trim()) {
         try {
-          const userDoc = await getDoc(doc(firestore, "users", storedUserId))
+          const userDoc = await getDoc(doc(firestore, "users", storedUserId));
           if (!userDoc.exists()) {
-            Toast.show("User not found", options)
-            return
+            Toast.show("User not found", options);
+            return;
           }
-          const userEmail = userDoc.data().email
+          const userEmail = userDoc.data().email;
           const userCredential = await signInWithEmailAndPassword(
             auth,
             userEmail,
             oldPassword
-          )
-
-          await updatePassword(userCredential.user, newPassword.trim())
-          setOldPassword("")
-          setNewPassword("")
-          Toast.show("Password updated successfully", options)
-          changesMade = true
+          );
+  
+          await updatePassword(userCredential.user, newPassword.trim());
+          setOldPassword("");
+          setNewPassword("");
+          Toast.show("Password updated successfully", options);
+  
+          notifications.push({
+            id: uuidv4(),
+            type: "Profile Update",
+            message: "Your password has been updated.",
+            timestamp: new Date(),
+          });
+          changesMade = true;
         } catch (error) {
-          let errorMessage = "Something went wrong. Please try again."
-
+          let errorMessage = "Something went wrong. Please try again.";
+  
           if (error.code === "auth/missing-password") {
-            errorMessage = "Password is required. Please enter your password."
+            errorMessage = "Password is required. Please enter your password.";
           } else if (error.code === "auth/invalid-credential") {
             errorMessage =
-              "Invalid Old Password. Please Re-enter your Old Password."
-            setOldPassword("")
+              "Invalid Old Password. Please Re-enter your Old Password.";
+            setOldPassword("");
           } else if (error.code === "auth/weak-password") {
-            errorMessage = "Password should be at least 6 characters."
+            errorMessage = "Password should be at least 6 characters.";
           }
-
-          Toast.show(errorMessage, options)
+  
+          Toast.show(errorMessage, options);
         }
       }
-
+  
+      // If any changes were made, update the notifications in Firestore
       if (changesMade) {
-        router.replace("onboarding/tabs/profile/")
+        await updateDoc(userDocRef, { notifications }); // Save notifications to Firestore
+        router.replace("onboarding/tabs/profile/");
       }
     } catch (error) {
-      console.error("Error updating profile:", error)
-      Toast.show("Failed to update profile", options)
+      console.error("Error updating profile:", error);
+      Toast.show("Failed to update profile", options);
     } finally {
-      setAccountLoading(false)
+      setAccountLoading(false);
     }
-  }
+  };
 
   const handleCancel = () => {
     Toast.show("No changes made", options)
@@ -284,11 +310,11 @@ const AppStore = ({ children }) => {
         totalIncomeAmount: updatedTotalIncomeAmount,
       })
 
-      notifications.sendPushNotification(
-        pushToken,
-        `${selectedType} Added`,
-        `A new ${selectedType.toLowerCase()} of ₹${numericAmount} has been added.`
-      )
+      // notifications.sendPushNotification(
+      //   pushToken,
+      //   `${selectedType} Added`,
+      //   `A new ${selectedType.toLowerCase()} of ₹${numericAmount} has been added.`
+      // )
       Toast.show(`${selectedType} added successfully`, options)
       setSelectedType("Expense")
       setSelected("")
@@ -321,12 +347,13 @@ const AppStore = ({ children }) => {
 
       if (userDocSnap.exists()) {
         await updateDoc(userDocRef, { budget: Number(budget) })
+        setBudget(Number(budget))
         Toast.show("Budget updated successfully", options)
-        notifications.sendPushNotification(
-          pushToken,
-          "Budget Changed",
-          `Budget has changed to ${budget}`
-        )
+        // notifications.sendPushNotification(
+        //   pushToken,
+        //   "Budget Changed",
+        //   `Budget has changed to ${budget}`
+        // )
         router.back()
       } else {
         Toast.show("User document does not exist", options)
@@ -359,56 +386,61 @@ const AppStore = ({ children }) => {
   const handleDeleteTransaction = async (transactionId) => {
     try {
       if (!storedUserId) {
-        console.log("User ID not found")
-        return
+        console.log("User ID not found");
+        return;
       }
-
-      const userRef = doc(firestore, "users", storedUserId)
-      const userDoc = await getDoc(userRef)
-
+  
+      const userRef = doc(firestore, "users", storedUserId);
+      const userDoc = await getDoc(userRef);
+  
       if (!userDoc.exists()) {
-        console.log("User document not found")
-        return
+        console.log("User document not found");
+        return;
       }
-
-      const userData = userDoc.data()
+  
+      const userData = userDoc.data();
       const transactionToDelete = userData.expenses.find(
         (expense) => expense.id === transactionId
-      )
-
+      );
+  
       if (!transactionToDelete) {
-        console.log("Transaction not found")
-        return
+        console.log("Transaction not found");
+        return;
       }
-
+  
       const updatedExpenses = userData.expenses.filter(
         (expense) => expense.id !== transactionId
-      )
-
-      let updatedFields = { expenses: updatedExpenses }
-
+      );
+  
+      let updatedFields = { expenses: updatedExpenses };
+  
       if (transactionToDelete.method === "Expense") {
         updatedFields.totalExpensesAmount =
-          (userData.totalExpensesAmount || 0) - transactionToDelete.amount
+          (userData.totalExpensesAmount || 0) - transactionToDelete.amount;
       } else if (transactionToDelete.method === "Income") {
         updatedFields.totalIncomeAmount =
-          (userData.totalIncomeAmount || 0) - transactionToDelete.amount
+          (userData.totalIncomeAmount || 0) - transactionToDelete.amount;
       }
-
-      await updateDoc(userRef, updatedFields)
-      notifications.sendPushNotification(
-      pushToken,
-      `${transactionToDelete.method} Deleted`,
-      `A ${transactionToDelete.method.toLowerCase()} of ₹${
-        transactionToDelete.amount
-      } has been deleted.`
-    );
-      router.push("onboarding/tabs/transactions")
-      Toast.show(`${transactionToDelete.method} deleted successfully`, options)
+  
+      const notifications = userData.notifications || [];
+      notifications.push({
+        id: uuidv4(),
+        type: "Transaction Deleted",
+        message: `An ${transactionToDelete.method.toLowerCase()} of ₹${
+          transactionToDelete.amount
+        } has been deleted.`,
+        timestamp: new Date(),
+      });
+  
+      updatedFields.notifications = notifications;
+  
+      await updateDoc(userRef, updatedFields);
+      router.push("onboarding/tabs/transactions");
+      Toast.show(`${transactionToDelete.method} deleted successfully`, options);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
 
   return (
     <AppContext.Provider
@@ -422,6 +454,7 @@ const AppStore = ({ children }) => {
         setStoredUserId,
         storedUserId,
         pushToken,
+
         // ACCOUNT TAB
         name,
         setName,
@@ -434,6 +467,8 @@ const AppStore = ({ children }) => {
         oldPassword,
         setNewPassword,
         newPassword,
+        notifications,
+        setNotifications,
 
         // ADD EXPENSES/INCOME
         handleSubmit,
