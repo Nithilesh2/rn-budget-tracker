@@ -21,10 +21,11 @@ import { auth, firestore, provider } from "../../firebase/firebaseConfig"
 import Toast from "react-native-root-toast"
 import { createUserWithEmailAndPassword } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
-import { AppContext } from "../../context/AppContext";
+import { AppContext } from "../../context/AppContext"
+import notifications from "../utils/notifications"
 
 const Register = () => {
-  const { options } = useContext(AppContext)
+  const { options, pushToken } = useContext(AppContext)
   const [showPassword, setShowPassword] = useState(false)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -75,10 +76,15 @@ const Register = () => {
             name: trimmedName,
             email: trimmedEmail,
             uid: user.uid,
-            userIconNumber: randomNumberForIcon
+            userIconNumber: randomNumberForIcon,
           })
           Toast.show("User registered successfully", options)
           router.push("/onboarding/login")
+          notifications.sendPushNotification(
+            pushToken,
+            "Welcome to Budget Tracker! 🎉",
+            `Hi ${trimmedName}, your account has been created successfully.`
+          )
           setLoading(false)
         } catch (error) {
           Toast.show("Error saving user data to Firestore", options)

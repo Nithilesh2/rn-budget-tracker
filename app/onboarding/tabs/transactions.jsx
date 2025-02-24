@@ -6,7 +6,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from "react-native"
-import React, { useContext, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import { Searchbar } from "react-native-paper"
 import { useFonts } from "expo-font"
 import { Poppins_400Regular } from "@expo-google-fonts/poppins"
@@ -15,7 +15,7 @@ import { AppContext } from "../../../context/AppContext"
 import IconMap from "../../../assets/IconMap/IconMap"
 import data from "./../../../components/IconsData"
 import LottieView from "lottie-react-native"
-import { useRouter } from "expo-router";
+import { useRouter } from "expo-router"
 
 const Transactions = () => {
   const { userData, refreshing, setRefreshing, fetchData } =
@@ -59,6 +59,10 @@ const Transactions = () => {
     },
     {}
   )
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   const handleRefreshing = () => {
     setRefreshing(true)
@@ -130,7 +134,11 @@ const Transactions = () => {
                         activeOpacity={0.8}
                         key={transaction.id}
                         style={styles.transactionItem}
-                        onPress={() => router.push(`onboarding/tabs/detailedData?id=${transaction.id}`)}
+                        onPress={() =>
+                          router.push(
+                            `onboarding/tabs/detailedData?id=${transaction.id}`
+                          )
+                        }
                       >
                         {selectedItem && IconMap[selectedItem.icon]
                           ? React.createElement(IconMap[selectedItem.icon], {
@@ -144,7 +152,10 @@ const Transactions = () => {
                           <Text style={styles.transactionTitle}>
                             {transaction.categoryType}
                           </Text>
-                          <Text style={styles.transactionDesc} numberOfLines={1}>
+                          <Text
+                            style={styles.transactionDesc}
+                            numberOfLines={1}
+                          >
                             {transaction.description}
                           </Text>
                         </View>

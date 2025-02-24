@@ -60,12 +60,12 @@ const setBudget = () => {
             value={budget}
             maxLength={7}
             onChangeText={(text) => {
-              let numericValue = text.replace(/[^0-9]/g, "")
-              if (numericValue === "") {
-                setBudget("")
-              } else {
-                setBudget(numericValue)
-              }
+              // let numericValue = text.replace(/[^0-9]/g, "")
+              // if (numericValue === "") {
+                // setBudget("")
+              // } else {
+                setBudget(text)
+              // }
             }}
           />
         </View>

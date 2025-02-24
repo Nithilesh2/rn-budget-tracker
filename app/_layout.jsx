@@ -4,6 +4,7 @@ import { Stack, useRouter } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { RootSiblingParent } from "react-native-root-siblings"
 import AppStore from "../context/AppStore"
+import notifications from "./utils/notifications"
 
 const _layout = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -30,8 +31,17 @@ const _layout = () => {
         setLoading(false)
       }
     }
-
     checkAuthState()
+  }, [])
+
+  useEffect(() => {
+    const getToken = async () => {
+      const token = await notifications.registerForPushNotificationsAsync()
+      if (token) {
+        await AsyncStorage.setItem("notificationPushToken", token)
+      }
+    }
+    getToken()
   }, [])
 
   useEffect(() => {

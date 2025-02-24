@@ -8,7 +8,7 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native"
-import React, { useContext, useState } from "react"
+import React, { useContext, useState, useEffect } from "react"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { SafeAreaView } from "react-native"
 import ArrowLeftIcon from "../../../assets/icons/ArrowLeft"
@@ -23,7 +23,6 @@ import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { firestore } from "../../../firebase/firebaseConfig"
 import Toast from "react-native-root-toast"
-import { useEffect } from "react"
 import Modal from "react-native-modal"
 
 const DetailedData = () => {
@@ -38,60 +37,63 @@ const DetailedData = () => {
   const { id } = useLocalSearchParams()
   const router = useRouter()
 
-  useFonts({ Poppins_400Regular, Poppins_500Medium, Ubuntu_500Medium })
-
-  const transaction = userData.find((user) => user.id === id)
-  if (!transaction) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.notFoundContainer}>
-          <Text style={styles.notFoundText}>Transaction not found!</Text>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.goBackButton}
-          >
-            <Text style={styles.goBackText}>Go Back</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    )
-  }
+  const [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Ubuntu_500Medium,
+  })
 
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [description, setDescription] = useState(transaction.description || "")
+  const [description, setDescription] = useState("")
+  const [transactions, setTransactions] = useState(userData)
+  const [transaction, setTransaction] = useState(null)
+  const [finalFormattedDate, setFinalFormattedDate] = useState()
 
-  const formattedDate = new Date(
-    transaction.timestamp.seconds * 1000
-  ).toLocaleDateString("en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#7F3DFF" />
+      </View>
+    )
+  }
 
-  const day = new Date(transaction.timestamp.seconds * 1000).getDate()
-  const suffix =
-    day % 10 === 1 && day !== 11
-      ? "st"
-      : day % 10 === 2 && day !== 12
-      ? "nd"
-      : day % 10 === 3 && day !== 13
-      ? "rd"
-      : "th"
+  useEffect(() => {
+    if (transactions.length > 0) {
+      const foundTransaction = transactions.find((t) => t.id === id) || null
+      setTransaction(foundTransaction)
 
-  const formattedTime = new Date(
-    transaction.timestamp.seconds * 1000
-  ).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  })
+      if (foundTransaction) {
+        const date = new Date(foundTransaction.timestamp.seconds * 1000)
+        const formattedDate = date.toLocaleDateString("en-US", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
 
-  const finalFormattedDate = `${formattedDate.replace(
-    /\d+/,
-    day + suffix
-  )} ${formattedTime}`
+        const day = date.getDate()
+        const suffix =
+          day % 10 === 1 && day !== 11
+            ? "st"
+            : day % 10 === 2 && day !== 12
+            ? "nd"
+            : day % 10 === 3 && day !== 13
+            ? "rd"
+            : "th"
+
+        const formattedTime = date.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        })
+
+        setFinalFormattedDate(
+          `${formattedDate.replace(/\d+/, day + suffix)} ${formattedTime}`
+        )
+      }
+    }
+  }, [transactions, id])
 
   const updateTransaction = async () => {
     try {
@@ -101,32 +103,40 @@ const DetailedData = () => {
 
       if (userDocSnap.exists()) {
         let expenses = userDocSnap.data().expenses || []
-
         const index = expenses.findIndex((expense) => expense.id === id)
+
         if (index !== -1) {
           expenses[index] = {
             ...expenses[index],
-            description: description,
+            description: description, 
           }
           await updateDoc(userDocRef, { expenses })
+
+          const updatedTransactions = transactions.map((t) =>
+            t.id === id ? { ...t, description } : t
+          )
+
+          setTransactions(updatedTransactions)
+          setTransaction((prev) => ({
+            ...prev,
+            description: description,
+          }))
 
           setIsEditing(false)
         } else {
           Toast.show("Transaction not found", options)
-          console.error("Transaction not found")
         }
       }
-      setLoading(false)
     } catch (err) {
       console.error(err)
     } finally {
       setLoading(false)
     }
   }
+
   useEffect(() => {
-    setDescription(transaction.description || "")
-    setIsEditing(false)
-  }, [transaction])
+    setTransactions(userData)
+  }, [userData])
 
   return (
     <KeyboardAvoidingView
@@ -155,10 +165,14 @@ const DetailedData = () => {
           <View style={styles.bottom}>
             <View style={styles.bTop}>
               <View style={styles.amountContainer}>
-                <Text style={styles.amountText}>₹{transaction.amount}</Text>
+                <Text style={styles.amountText}>
+                  ₹{transaction?.amount || 0}
+                </Text>
               </View>
               <View style={styles.dateContainer}>
-                <Text style={styles.dateText}>{finalFormattedDate}</Text>
+                <Text style={styles.dateText}>
+                  {finalFormattedDate || "Loading..."}
+                </Text>
               </View>
             </View>
           </View>
@@ -168,11 +182,13 @@ const DetailedData = () => {
           <View style={styles.boxContainer}>
             <View style={styles.left}>
               <Text style={styles.topC}>Type</Text>
-              <Text style={styles.bottomC}>{transaction.method}</Text>
+              <Text style={styles.bottomC}>{transaction?.method || "N/A"}</Text>
             </View>
             <View style={styles.middle}>
               <Text style={styles.topC}>Category</Text>
-              <Text style={styles.bottomC}>{transaction.categoryType}</Text>
+              <Text style={styles.bottomC}>
+                {transaction?.categoryType || "N/A"}
+              </Text>
             </View>
           </View>
 
@@ -194,7 +210,11 @@ const DetailedData = () => {
                 multiline
               />
             ) : (
-              <Text style={styles.descText}>{description}</Text>
+              <Text style={styles.descText}>
+                {transaction
+                  ? transaction?.description || "No description"
+                  : "Transaction not found"}
+              </Text>
             )}
           </View>
         </View>
@@ -207,6 +227,7 @@ const DetailedData = () => {
               if (isEditing) {
                 updateTransaction()
               } else {
+                setDescription(transaction?.description || "")
                 setIsEditing(true)
               }
             }}

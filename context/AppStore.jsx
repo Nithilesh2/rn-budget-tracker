@@ -9,11 +9,13 @@ import { useRouter } from "expo-router"
 import { signInWithEmailAndPassword, updatePassword } from "firebase/auth"
 import "react-native-get-random-values"
 import { v4 as uuidv4 } from "uuid"
+import notifications from "../app/utils/notifications"
 
 const AppStore = ({ children }) => {
   const [refreshing, setRefreshing] = useState(false)
   const [selectedIcon, setSelectedIcon] = useState(1)
   const [storedUserId, setStoredUserId] = useState(null)
+  const [pushToken, setPushToken] = useState(null)
   const router = useRouter()
 
   // Account tab state
@@ -92,6 +94,8 @@ const AppStore = ({ children }) => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
+        const storedToken = await AsyncStorage.getItem("notificationPushToken")
+        setPushToken(storedToken)
         const userId = await AsyncStorage.getItem("userId")
         if (!userId) {
           router.replace("onboarding/login")
@@ -128,7 +132,7 @@ const AppStore = ({ children }) => {
     if (storedUserId) {
       fetchData()
     }
-  }, [storedUserId])
+  }, [])
 
   // Handle profile update
   const handleUpdate = async () => {
@@ -173,10 +177,7 @@ const AppStore = ({ children }) => {
             Toast.show("User not found", options)
             return
           }
-
           const userEmail = userDoc.data().email
-
-          // Re-authenticate the user using their email and old password
           const userCredential = await signInWithEmailAndPassword(
             auth,
             userEmail,
@@ -283,6 +284,11 @@ const AppStore = ({ children }) => {
         totalIncomeAmount: updatedTotalIncomeAmount,
       })
 
+      notifications.sendPushNotification(
+        pushToken,
+        `${selectedType} Added`,
+        `A new ${selectedType.toLowerCase()} of ₹${numericAmount} has been added.`
+      )
       Toast.show(`${selectedType} added successfully`, options)
       setSelectedType("Expense")
       setSelected("")
@@ -316,6 +322,11 @@ const AppStore = ({ children }) => {
       if (userDocSnap.exists()) {
         await updateDoc(userDocRef, { budget: Number(budget) })
         Toast.show("Budget updated successfully", options)
+        notifications.sendPushNotification(
+          pushToken,
+          "Budget Changed",
+          `Budget has changed to ${budget}`
+        )
         router.back()
       } else {
         Toast.show("User document does not exist", options)
@@ -332,7 +343,7 @@ const AppStore = ({ children }) => {
   const handleLogout = async () => {
     try {
       // Clear AsyncStorage
-      await auth.signOut()
+      // await auth.signOut()
       await AsyncStorage.removeItem("loggedIn")
       await AsyncStorage.clear()
 
@@ -344,29 +355,56 @@ const AppStore = ({ children }) => {
     }
   }
 
-  // Delete particular Transaction throush transaction id
+  // Delete particular Transaction through transaction id
   const handleDeleteTransaction = async (transactionId) => {
     try {
-      // if (!storedUserId) {
-      //   console.log("User ID not found")
-      //   return
-      // }
-      // const userRef = doc(firestore, "users", storedUserId)
-      // const userDoc = await getDoc(userRef)
+      if (!storedUserId) {
+        console.log("User ID not found")
+        return
+      }
 
-      // if (!userDoc.exists()) {
-      //   console.log("User document not found")
-      //   return
-      // }
-      // const userData = userDoc.data()
-      // const updatedExpenses = userData.expenses.filter(
-      //   (expense) => expense.id !== transactionId
-      // )
-      // await updateDoc(userRef, {
-      //   expenses: updatedExpenses,
-      // })
-      // router.push('onboarding/tabs/transactions')
-      Toast.show('Transaction cannot be deleted this time', options)
+      const userRef = doc(firestore, "users", storedUserId)
+      const userDoc = await getDoc(userRef)
+
+      if (!userDoc.exists()) {
+        console.log("User document not found")
+        return
+      }
+
+      const userData = userDoc.data()
+      const transactionToDelete = userData.expenses.find(
+        (expense) => expense.id === transactionId
+      )
+
+      if (!transactionToDelete) {
+        console.log("Transaction not found")
+        return
+      }
+
+      const updatedExpenses = userData.expenses.filter(
+        (expense) => expense.id !== transactionId
+      )
+
+      let updatedFields = { expenses: updatedExpenses }
+
+      if (transactionToDelete.method === "Expense") {
+        updatedFields.totalExpensesAmount =
+          (userData.totalExpensesAmount || 0) - transactionToDelete.amount
+      } else if (transactionToDelete.method === "Income") {
+        updatedFields.totalIncomeAmount =
+          (userData.totalIncomeAmount || 0) - transactionToDelete.amount
+      }
+
+      await updateDoc(userRef, updatedFields)
+      notifications.sendPushNotification(
+      pushToken,
+      `${transactionToDelete.method} Deleted`,
+      `A ${transactionToDelete.method.toLowerCase()} of ₹${
+        transactionToDelete.amount
+      } has been deleted.`
+    );
+      router.push("onboarding/tabs/transactions")
+      Toast.show(`${transactionToDelete.method} deleted successfully`, options)
     } catch (error) {
       console.log(error)
     }
@@ -383,6 +421,7 @@ const AppStore = ({ children }) => {
         handleLogout,
         setStoredUserId,
         storedUserId,
+        pushToken,
         // ACCOUNT TAB
         name,
         setName,

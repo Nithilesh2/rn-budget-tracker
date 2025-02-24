@@ -233,6 +233,7 @@ const index = () => {
                           </Text>
                           <Text
                             style={styles.recentTransactionsItemDescription}
+                            numberOfLines={1}
                           >
                             {transaction.description}
                           </Text>
