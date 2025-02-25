@@ -5,9 +5,10 @@ import {
   Text,
   View,
   Pressable,
+  TouchableOpacity,
+  Dimensions,
 } from "react-native"
-import React, { useState, useEffect } from "react"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import React, { useState, useEffect, useContext } from "react"
 import { useRouter } from "expo-router"
 import { useFonts } from "expo-font"
 import {
@@ -17,10 +18,19 @@ import {
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import ArrowLeftIcon from "../../../../../assets/icons/ArrowLeft"
 import Toast from "react-native-root-toast"
+import { AppContext } from "../../../../../context/AppContext"
+import { doc, getDoc, updateDoc } from "firebase/firestore"
+import { firestore } from "../../../../../firebase/firebaseConfig"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+
+const { height } = Dimensions.get("screen")
 
 const Security = () => {
+  const { options, storedUserId } = useContext(AppContext)
   const router = useRouter()
-  const [selectedOption, setSelectedOption] = useState(null)
+  const [selectedOption, setSelectedOption] = useState("PIN")
+  const [securityData, setSecurityData] = useState(null)
+  const [loading, setLoading] = useState(false)
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -29,30 +39,58 @@ const Security = () => {
   })
 
   useEffect(() => {
-    const loadSelectedOption = async () => {
+    const loadSecuritySettings = async () => {
       try {
-        const storedOption = await AsyncStorage.getItem("selectedSecurity")
-        if (storedOption) {
-          setSelectedOption(storedOption)
+        if (!storedUserId) return
+        const userRef = doc(firestore, "users", storedUserId)
+        const userDoc = await getDoc(userRef)
+        if (userDoc.exists()) {
+          const userData = userDoc.data()
+          const securitySettings = userData.security || {}
+          setSecurityData(securitySettings)
+          const selected = Object.keys(securitySettings).find(
+            (key) => securitySettings[key]?.enabled === true
+          )
+          const finalSelection = selected || "PIN"
+          setSelectedOption(finalSelection)
+          await AsyncStorage.setItem("selectedSecurity", finalSelection)
         }
       } catch (error) {
-        console.log("Error loading security option:", error)
+        console.log("Error loading security settings from Firestore:", error)
       }
     }
-    loadSelectedOption()
-  }, [])
+    if (storedUserId) loadSecuritySettings()
+  }, [storedUserId])
 
   const handleSecurityOptionSelect = async (option) => {
-    if (!option) {
-      console.log("Invalid security option selected:", option)
-      return
-    }
+    if (!option || !securityData) return
+    setSelectedOption(option)
+    await AsyncStorage.setItem("selectedSecurity", option)
+  }
 
+  const handleSave = async () => {
+    if (!storedUserId || !selectedOption || !securityData) return
+    setLoading(true)
     try {
-      await AsyncStorage.setItem("selectedSecurity", option)
-      setSelectedOption(option)
+      const userRef = doc(firestore, "users", storedUserId)
+      const updatedSecurity = {
+        pin: { ...securityData.pin, enabled: selectedOption === "PIN" },
+        fingerprint: {
+          ...securityData.fingerprint,
+          enabled: selectedOption === "Fingerprint",
+        },
+        faceid: {
+          ...securityData.faceid,
+          enabled: selectedOption === "Face ID",
+        },
+      }
+      await updateDoc(userRef, { security: updatedSecurity })
+      Toast.show(`Security changed to ${selectedOption}`, options)
+      router.back()
     } catch (error) {
-      console.log("Error saving security option:", error)
+      console.log("Error updating security settings:", error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -63,19 +101,6 @@ const Security = () => {
       </View>
     )
   }
-  const options = {
-    duration: Toast.durations.LONG,
-    position: Toast.positions.TOP,
-    shadow: true,
-    animation: true,
-    hideOnPress: true,
-    hideOnPress: true,
-    delay: 0,
-  }
-  const handleBack = () => {
-    Toast.show(`Security changed to ${selectedOption}`, options)
-    router.back()
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -85,7 +110,7 @@ const Security = () => {
           width={30}
           color="black"
           strokeWidth={2}
-          onPress={handleBack}
+          onPress={() => router.back()}
         />
         <Text style={styles.title}>Security</Text>
       </View>
@@ -104,6 +129,19 @@ const Security = () => {
           </Pressable>
         ))}
       </View>
+
+      <TouchableOpacity
+        style={styles.saveButton}
+        activeOpacity={0.8}
+        onPress={handleSave}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="white" />
+        ) : (
+          <Text style={styles.saveText}>Save</Text>
+        )}
+      </TouchableOpacity>
     </SafeAreaView>
   )
 }
@@ -165,5 +203,23 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     backgroundColor: "#7F3DFF",
+  },
+  saveButton: {
+    backgroundColor: "#7F3DFF",
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 30,
+    position: "absolute",
+    bottom: height * 0.05,
+    width: "90%",
+    alignSelf: "center",
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  saveText: {
+    fontFamily: "Poppins_500Medium",
+    fontSize: 16,
+    color: "white",
   },
 })

@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Linking,
 } from "react-native"
 import React, { useState, useCallback } from "react"
 import AsyncStorage from "@react-native-async-storage/async-storage"
@@ -57,95 +58,125 @@ const index = () => {
     )
   }
 
+  const openLinkedIn = () => {
+    const url = "https://www.linkedin.com/in/bejagam-nithilesh/"
+    Linking.openURL(url).catch((err) =>
+      console.error("Couldn't load page", err)
+    )
+  }
+  const sendEmail = () => {
+    const email = "sunnybnithilesh@gmail.com"
+    const subject = "Inquiry from Budget Tracker App"
+    const body = "Hello Nithilesh, "
+    const mailto = `mailto:${email}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`
+    Linking.openURL(mailto)
+  }
+
   return (
-    <>
-      <SafeAreaView style={styles.container}>
-        <View style={styles.top}>
-          <ArrowLeftIcon
-            height={30}
-            width={30}
-            color="black"
-            strokeWidth={2}
-            onPress={() => router.back()}
-          />
-          <Text style={styles.title}>Settings</Text>
-        </View>
-        <View style={styles.bottomSettings}>
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={styles.boxesSetting}
-            onPress={() =>
-              router.push("/onboarding/tabs/profile/settings/currency")
-            }
-          >
-            <Text style={styles.boxTitle}>Currency</Text>
-            <View style={styles.boxContent}>
-              <Text style={styles.boxText}>{selectedCurrency}</Text>
-              <ArrowRightIcon
-                width={30}
-                height={30}
-                color="#7F3DFF"
-                strokeWidth={2}
-              />
-            </View>
-          </TouchableOpacity>
-
-          <View style={styles.boxesSetting}>
-            <Text style={styles.boxTitle}>Language</Text>
-            <View style={styles.boxContent}>
-              <Text style={[styles.boxText, { marginRight: 20 }]}>English</Text>
-            </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.top}>
+        <ArrowLeftIcon
+          height={30}
+          width={30}
+          color="black"
+          strokeWidth={2}
+          onPress={() => router.back()}
+        />
+        <Text style={styles.title}>Settings</Text>
+      </View>
+      <View style={styles.bottomSettings}>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={styles.boxesSetting}
+          onPress={() =>
+            router.push("/onboarding/tabs/profile/settings/currency")
+          }
+        >
+          <Text style={styles.boxTitle}>Currency</Text>
+          <View style={styles.boxContent}>
+            <Text style={styles.boxText}>{selectedCurrency}</Text>
+            <ArrowRightIcon
+              width={30}
+              height={30}
+              color="#7F3DFF"
+              strokeWidth={2}
+            />
           </View>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={styles.boxesSetting}
-            onPress={() =>
-              router.push("/onboarding/tabs/profile/settings/security")
-            }
-          >
-            <Text style={styles.boxTitle}>Security</Text>
-            <View style={styles.boxContent}>
-              <Text style={styles.boxText}>{selectedSecurity}</Text>
-              <ArrowRightIcon
-                width={30}
-                height={30}
-                color="#7F3DFF"
-                strokeWidth={2}
-              />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={[styles.boxesSetting, { borderBottomWidth: 0 }]}
-            onPress={() => router.push("/onboarding/tabs/profile/settings/notification")}
-          >
-            <Text style={styles.boxTitle}>Notification</Text>
-            <View style={styles.boxContent}>
-              <ArrowRightIcon
-                width={30}
-                height={30}
-                color="#7F3DFF"
-                strokeWidth={2}
-              />
-            </View>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.bottomSupport}>
-          <View style={styles.supportContainer}>
-            <Text style={styles.supportText}>Support</Text>
-            <Text style={styles.supportLink}>
-              www.crypto-tracker.com/support
-            </Text>
-          </View>
-          <View style={styles.versionContainer}>
-            <Text style={styles.versionText}>Version 1.0.0</Text>
-            <Text style={styles.versionText}>Budget Tracker</Text>
+        <View style={styles.boxesSetting}>
+          <Text style={styles.boxTitle}>Language</Text>
+          <View style={styles.boxContent}>
+            <Text style={[styles.boxText, { marginRight: 20 }]}>English</Text>
           </View>
         </View>
-      </SafeAreaView>
-    </>
+
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={styles.boxesSetting}
+          onPress={() =>
+            router.push("/onboarding/tabs/profile/settings/security")
+          }
+        >
+          <Text style={styles.boxTitle}>Security</Text>
+          <View style={styles.boxContent}>
+            <Text style={styles.boxText}>{selectedSecurity}</Text>
+            <ArrowRightIcon
+              width={30}
+              height={30}
+              color="#7F3DFF"
+              strokeWidth={2}
+            />
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={[styles.boxesSetting, { borderBottomWidth: 0 }]}
+          onPress={() =>
+            router.push("/onboarding/tabs/profile/settings/notification")
+          }
+        >
+          <Text style={styles.boxTitle}>Notification</Text>
+          <View style={styles.boxContent}>
+            <ArrowRightIcon
+              width={30}
+              height={30}
+              color="#7F3DFF"
+              strokeWidth={2}
+            />
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.bottomSupport}>
+        <View style={styles.supportContainer}>
+          <Text style={styles.supportText}>Support</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <TouchableOpacity onPress={openLinkedIn}>
+              <Text style={styles.supportLink}>LinkedIn</Text>
+            </TouchableOpacity>
+            <Text>,</Text>
+            <TouchableOpacity onPress={sendEmail}>
+              <Text style={styles.supportLink}>Email</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.versionContainer}>
+          <Text style={styles.versionText}>Version 1.0.0</Text>
+          <Text style={styles.versionText}>Budget Tracker</Text>
+        </View>
+      </View>
+    </SafeAreaView>
   )
 }
 
@@ -226,7 +257,7 @@ const styles = StyleSheet.create({
   },
   supportLink: {
     fontFamily: "Poppins_400Regular",
-    fontSize: 14,
+    fontSize: 15,
     color: "#7F3DFF",
     textDecorationLine: "underline",
     textAlign: "center",

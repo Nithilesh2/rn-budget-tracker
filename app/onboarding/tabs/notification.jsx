@@ -181,7 +181,7 @@ const Notification = () => {
                 <LottieView
                   source={require("../../../assets/Animations/noNotifications.json")}
                   autoPlay
-                  loop={true}
+                  loop={false}
                   style={{ width: 350, height: 350 }}
                 />
                 <Text style={styles.noNewNotificationsText}>

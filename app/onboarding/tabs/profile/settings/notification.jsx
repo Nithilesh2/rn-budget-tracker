@@ -17,9 +17,9 @@ import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import ArrowLeftIcon from "../../../../../assets/icons/ArrowLeft"
 import Toast from "react-native-root-toast"
 
-const notification = () => {
-  const [onExpenses, setOnExpenses] = useState(false)
-  const [onBudget, setOnBudget] = useState(false)
+const Notification = () => {
+  const [onExpenses] = useState(true)
+  const [onBudget] = useState(true)
   const router = useRouter()
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -34,31 +34,14 @@ const notification = () => {
       </View>
     )
   }
+
   const options = {
     duration: Toast.durations.LONG,
     position: Toast.positions.TOP,
     shadow: true,
     animation: true,
     hideOnPress: true,
-    hideOnPress: true,
     delay: 0,
-  }
-  const handleExpensesToggle = (value) => {
-    setOnExpenses(value)
-    if (value) {
-      Toast.show("Expense Alert is turned ON", options)
-    } else {
-      Toast.show("Expense Alert is turned OFF", options)
-    }
-  }
-
-  const handleBudgetToggle = (value) => {
-    setOnBudget(value)
-    if (value) {
-      Toast.show("Budget notifications are turned ON", options)
-    } else {
-      Toast.show("Budget notifications are turned OFF", options)
-    }
   }
 
   return (
@@ -76,16 +59,16 @@ const notification = () => {
       <View style={styles.bottom}>
         <View style={styles.boxes}>
           <View style={styles.left}>
-            <Text style={styles.titleContainer}>Expense Alert</Text>
+            <Text style={styles.titleContainer}>Expense/Income Alert</Text>
             <Text style={styles.subtitle}>
-              Get notification about your expenses
+              Get notification when your expenses/income was deleted.
             </Text>
           </View>
           <View style={styles.right}>
             <Switch
               value={onExpenses}
-              onValueChange={handleExpensesToggle}
-              thumbColor={onExpenses ? "#7F3DFF" : "#C4C4C4"}
+              disabled={true}
+              thumbColor={"#7F3DFF"}
               trackColor={{ false: "#C4C4C4", true: "#7F3DFF" }}
               style={styles.switch}
             />
@@ -95,14 +78,14 @@ const notification = () => {
           <View style={styles.left}>
             <Text style={styles.titleContainer}>Budget</Text>
             <Text style={styles.subtitle}>
-              Get notification when your budget changes
+              Get notification when your budget changes.
             </Text>
           </View>
           <View style={styles.right}>
             <Switch
               value={onBudget}
-              onValueChange={handleBudgetToggle}
-              thumbColor={onBudget ? "#7F3DFF" : "#C4C4C4"}
+              disabled={true}
+              thumbColor={"#7F3DFF"}
               trackColor={{ false: "#C4C4C4", true: "#7F3DFF" }}
               style={styles.switch}
             />
@@ -113,7 +96,7 @@ const notification = () => {
   )
 }
 
-export default notification
+export default Notification
 
 const styles = StyleSheet.create({
   loadingContainer: {

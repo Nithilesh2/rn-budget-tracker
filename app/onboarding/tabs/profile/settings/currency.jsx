@@ -5,8 +5,10 @@ import {
   Text,
   View,
   Pressable,
+  TouchableOpacity,
+  Dimensions,
 } from "react-native"
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useContext } from "react"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useRouter } from "expo-router"
 import * as Localization from "expo-localization"
@@ -18,15 +20,14 @@ import {
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import ArrowLeftIcon from "../../../../../assets/icons/ArrowLeft"
 import Toast from "react-native-root-toast"
+import { AppContext } from "../../../../../context/AppContext"
+import { doc, getDoc, updateDoc } from "firebase/firestore"
+import { firestore } from "../../../../../firebase/firebaseConfig"
 
-const currency = () => {
-  const router = useRouter()
-  const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_500Medium,
-    Ubuntu_500Medium,
-  })
+const { height } = Dimensions.get("screen")
 
+const Currency = () => {
+  const { options, storedUserId } = useContext(AppContext)
   const currencies = {
     IN: "INR",
     US: "USD",
@@ -37,46 +38,87 @@ const currency = () => {
 
   const defaultCurrency = currencies[Localization.region] || "INR"
   const [selectedCurrency, setSelectedCurrency] = useState(defaultCurrency)
+  const [savedCurrency, setSavedCurrency] = useState(defaultCurrency)
+  const [loading, setLoading] = useState(false)
+
+  const router = useRouter()
+  useFonts({
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Ubuntu_500Medium,
+  })
 
   useEffect(() => {
     const loadCurrency = async () => {
       try {
-        const storedCurrency = await AsyncStorage.getItem("selectedCurrency")
-        setSelectedCurrency(storedCurrency || defaultCurrency)
+        if (!storedUserId) {
+          Toast.show("User ID not found", options)
+          return
+        }
+        setLoading(true)
+        const userRef = doc(firestore, "users", storedUserId)
+        const userDoc = await getDoc(userRef)
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data()
+          const userCurrency = userData.currency || "INR"
+
+          setSavedCurrency(userCurrency)
+          setSelectedCurrency(userCurrency)
+        } else {
+          Toast.show("User document not found", options)
+        }
+        setLoading(false)
       } catch (error) {
-        console.log("Error loading currency:", error)
+        console.log("Error loading currency from Firestore:", error)
+      } finally {
+        setLoading(false)
       }
     }
-    loadCurrency()
+    if (storedUserId) {
+      loadCurrency()
+    }
   }, [])
 
-  const handleCurrencySelect = async (currencyCode) => {
-    try {
-      await AsyncStorage.setItem("selectedCurrency", currencyCode)
-      setSelectedCurrency(currencyCode)
-    } catch (error) {
-      console.log("Error saving currency:", error)
+  useEffect(() => {
+    const storeCurrency = async () => {
+      try {
+        await AsyncStorage.setItem("selectedCurrency", savedCurrency)
+      } catch (error) {
+        console.log("Error saving currency to AsyncStorage:", error)
+      }
     }
+    storeCurrency()
+  }, [savedCurrency])
+
+  const handleCurrencySelect = (currencyCode) => {
+    setSelectedCurrency(currencyCode)
   }
-  const options = {
-    duration: Toast.durations.LONG,
-    position: Toast.positions.TOP,
-    shadow: true,
-    animation: true,
-    hideOnPress: true,
-    hideOnPress: true,
-    delay: 0,
-  }
-  if (!fontsLoaded) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7F3DFF" />
-      </View>
-    )
+
+  const handleSave = async () => {
+    try {
+      if (!storedUserId) {
+        console.log("User ID not found")
+        return
+      }
+      setLoading(true)
+      const userRef = doc(firestore, "users", storedUserId)
+      await updateDoc(userRef, { currency: selectedCurrency })
+
+      setSavedCurrency(selectedCurrency)
+
+      Toast.show("Currency updated successfully!", options)
+      router.back()
+      setLoading(false)
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleBack = () => {
-    Toast.show(`Currency changed to ${selectedCurrency}`, options)
+    setSelectedCurrency(savedCurrency)
     router.back()
   }
 
@@ -110,11 +152,23 @@ const currency = () => {
           </Pressable>
         ))}
       </View>
+
+      <TouchableOpacity
+        style={styles.saveButton}
+        activeOpacity={0.8}
+        onPress={handleSave}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="white" />
+        ) : (
+          <Text style={styles.saveText}>Save</Text>
+        )}
+      </TouchableOpacity>
     </SafeAreaView>
   )
 }
 
-export default currency
+export default Currency
 
 const styles = StyleSheet.create({
   loadingContainer: {
@@ -171,5 +225,23 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     backgroundColor: "#7F3DFF",
+  },
+  saveButton: {
+    backgroundColor: "#7F3DFF",
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 30,
+    position: "absolute",
+    bottom: height * 0.05,
+    width: "90%",
+    alignSelf: "center",
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  saveText: {
+    fontFamily: "Poppins_500Medium",
+    fontSize: 16,
+    color: "white",
   },
 })
