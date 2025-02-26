@@ -109,6 +109,10 @@ const index = () => {
               <Text style={styles.containerText}>Logout</Text>
             </TouchableOpacity>
           </View>
+          <View style={styles.versionContainer}>
+            <Text style={styles.versionText}>Version 1.0.0</Text>
+            <Text style={styles.versionText}>Budget Tracker</Text>
+          </View>
         </ScrollView>
 
         {showLogout && (
@@ -156,8 +160,10 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 10,
     paddingVertical: 17,
+    position: "relative",
   },
   top: {
     flexDirection: "row",
@@ -317,5 +323,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "white",
     textAlign: "center",
+  },
+  versionContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 10,
+    gap: 15,
+    position: 'absolute',
+    bottom: 20,
+    width: "100%",
+    alignSelf: "center",
+  },
+  versionText: {
+    fontFamily: "Poppins_400Regular",
+    fontSize: 16,
+    color: "grey",
+    marginBottom: 5,
   },
 })

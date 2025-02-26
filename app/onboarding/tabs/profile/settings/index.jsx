@@ -171,10 +171,6 @@ const index = () => {
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>Version 1.0.0</Text>
-          <Text style={styles.versionText}>Budget Tracker</Text>
-        </View>
       </View>
     </SafeAreaView>
   )
@@ -261,18 +257,5 @@ const styles = StyleSheet.create({
     color: "#7F3DFF",
     textDecorationLine: "underline",
     textAlign: "center",
-  },
-  versionContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: 10,
-    gap: 15,
-  },
-  versionText: {
-    fontFamily: "Poppins_400Regular",
-    fontSize: 16,
-    color: "grey",
-    marginBottom: 5,
   },
 })
