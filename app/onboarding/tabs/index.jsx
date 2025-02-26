@@ -8,8 +8,10 @@ import {
   Text,
   TouchableOpacity,
   View,
+  BackHandler,
+  ToastAndroid,
 } from "react-native"
-import React, { useCallback, useContext, useState } from "react"
+import React, { useCallback, useContext, useState, useEffect } from "react"
 import NotificationIcon from "./../../../assets/icons/Bell"
 import {
   Poppins_500Medium,
@@ -19,7 +21,6 @@ import { useFonts } from "expo-font"
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import SpendIncomeLineChart from "../../../components/Chart"
 import { useFocusEffect, useRouter } from "expo-router"
-import icons from "../../../components/Icons"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { AppContext } from "../../../context/AppContext"
 import IconMap from "../../../assets/IconMap/IconMap"
@@ -39,6 +40,7 @@ const index = () => {
     setStoredUserId,
   } = useContext(AppContext)
   const router = useRouter()
+  const [exitApp, setExitApp] = useState(false)
   const date = new Date()
   const options = { month: "long" }
   const monthName = new Intl.DateTimeFormat("en-US", options).format(date)
@@ -47,6 +49,31 @@ const index = () => {
     Poppins_500Medium,
     Ubuntu_500Medium,
   })
+
+  useEffect(() => {
+    const backAction = () => {
+      if (exitApp) {
+        BackHandler.exitApp()
+        return true
+      } else {
+        setExitApp(true)
+        ToastAndroid.show("Press back again to exit", ToastAndroid.SHORT)
+
+        setTimeout(() => {
+          setExitApp(false)
+        }, 2000)
+
+        return true
+      }
+    }
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    )
+
+    return () => backHandler.remove()
+  }, [exitApp])
 
   useFocusEffect(
     useCallback(() => {
@@ -212,7 +239,8 @@ const index = () => {
                   .sort(
                     (a, b) =>
                       (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)
-                  ).slice(0,5)
+                  )
+                  .slice(0, 5)
                   .map((transaction, index) => {
                     const selectedItem = data.find(
                       (item) => item.value === transaction.categoryType

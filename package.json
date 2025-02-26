@@ -61,7 +61,8 @@
     "uuid": "^11.0.5",
     "expo-notifications": "~0.29.13",
     "expo-device": "~7.0.2",
-    "expo-updates": "~0.27.1"
+    "expo-updates": "~0.27.1",
+    "expo-local-authentication": "~15.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
