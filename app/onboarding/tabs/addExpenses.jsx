@@ -22,6 +22,7 @@ import { useRouter } from "expo-router"
 import { AppContext } from "./../../../context/AppContext"
 import IconMap from "../../../assets/IconMap/IconMap"
 import data from "../../../components/IconsData"
+import currencySymbols from "./../../../components/CurrencySymbols"
 
 const { width } = Dimensions.get("screen")
 
@@ -38,6 +39,7 @@ const AddExpenses = () => {
     description,
     amountLoading,
     setSIcon,
+    currencyType,
   } = useContext(AppContext)
 
   const bgColorAnim = useRef(new Animated.Value(0)).current
@@ -127,7 +129,9 @@ const AddExpenses = () => {
         <View style={styles.amountContainer}>
           <Text style={styles.amountText}>How much?</Text>
           <View style={styles.amountTextContainer}>
-            <Text style={styles.rupeeSymbol}>₹</Text>
+            <Text style={styles.rupeeSymbol}>
+              {currencySymbols[currencyType] || "₹"}
+            </Text>
             <TextInput
               placeholder="0"
               style={styles.amountTextInput}

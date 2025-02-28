@@ -23,17 +23,40 @@ import Toast from "react-native-root-toast"
 import { AppContext } from "../../../../../context/AppContext"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { firestore } from "../../../../../firebase/firebaseConfig"
+import { ScrollView } from "react-native";
 
 const { height } = Dimensions.get("screen")
 
 const Currency = () => {
   const { options, storedUserId } = useContext(AppContext)
   const currencies = {
-    IN: "INR",
-    US: "USD",
-    KR: "KRW",
-    RU: "RUB",
-    SA: "SAR",
+    India: "INR",
+    USA: "USD",
+    "South Korea": "KRW",
+    Russia: "RUB",
+    "Saudi Arabia": "SAR",
+    "European Union": "EUR",
+    "United Kingdom": "GBP",
+    Japan: "JPY",
+    Australia: "AUD",
+    Canada: "CAD",
+    China: "CNY",
+    Switzerland: "CHF",
+    Singapore: "SGD",
+    "Hong Kong": "HKD",
+    "New Zealand": "NZD",
+    "South Africa": "ZAR",
+    Mexico: "MXN",
+    Brazil: "BRL",
+    Turkey: "TRY",
+    Sweden: "SEK",
+    Norway: "NOK",
+    Denmark: "DKK",
+    Malaysia: "MYR",
+    Thailand: "THB",
+    Indonesia: "IDR",
+    Philippines: "PHP",
+    Vietnam: "VND",
   }
 
   const defaultCurrency = currencies[Localization.region] || "INR"
@@ -135,23 +158,22 @@ const Currency = () => {
         <Text style={styles.title}>Currency</Text>
       </View>
 
-      <View style={styles.currencyList}>
-        {Object.entries(currencies).map(([countryCode, currencyCode]) => (
-          <Pressable
-            key={currencyCode}
-            style={styles.currencyItem}
-            onPress={() => handleCurrencySelect(currencyCode)}
-          >
-            <Text style={styles.currencyText}>{currencyCode}</Text>
-
-            <View style={styles.radioOuter}>
-              {selectedCurrency === currencyCode && (
-                <View style={styles.radioInner} />
-              )}
-            </View>
-          </Pressable>
-        ))}
-      </View>
+      <ScrollView style={styles.currencyList}>
+      {Object.entries(currencies).map(([countryName, currencyCode]) => (
+        <Pressable
+          key={currencyCode}
+          style={styles.currencyItem}
+          onPress={() => handleCurrencySelect(currencyCode)}
+        >
+          <Text style={styles.currencyText}>{countryName}</Text>
+          <View style={styles.radioOuter}>
+            {selectedCurrency === currencyCode && (
+              <View style={styles.radioInner} />
+            )}
+          </View>
+        </Pressable>
+      ))}
+    </ScrollView>
 
       <TouchableOpacity
         style={styles.saveButton}
@@ -197,6 +219,7 @@ const styles = StyleSheet.create({
   currencyList: {
     marginTop: 30,
     paddingHorizontal: 25,
+    marginBottom: 65
   },
   currencyItem: {
     flexDirection: "row",
@@ -232,7 +255,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 30,
     position: "absolute",
-    bottom: height * 0.05,
+    bottom: height * 0.04,
     width: "90%",
     alignSelf: "center",
     height: 50,

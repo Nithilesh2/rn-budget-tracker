@@ -8,9 +8,10 @@ import {
 import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
 import { useRouter } from "expo-router"
 import { AppContext } from "../../../../context/AppContext"
+import currencySymbols from "../../../../components/CurrencySymbols"
 
 const Budget = () => {
-  const { budget, userExpenses } = useContext(AppContext)
+  const { budget, userExpenses, currencyType } = useContext(AppContext)
   const router = useRouter()
   useFonts({
     Poppins_400Regular,
@@ -65,7 +66,7 @@ const Budget = () => {
           <>
             <View style={styles.yesBudgetContainer}>
               <Text style={styles.yesbudgetText}>
-                Remaining ₹
+                Remaining {currencySymbols[currencyType] || "₹"}
                 {userExpenses === null ||
                 userExpenses === undefined ||
                 userExpenses === 0
@@ -85,13 +86,14 @@ const Budget = () => {
                 />
               </View>
               <Text style={styles.progressText}>
-                Spent: ₹
+                Spent: {currencySymbols[currencyType] || "₹"}
                 {userExpenses === null ||
                 userExpenses === undefined ||
                 userExpenses === 0
                   ? 0
                   : userExpenses}{" "}
-                out of ₹{budget}
+                out of {currencySymbols[currencyType] || "₹"}
+                {budget}
               </Text>
             </View>
             <View style={styles.buttonContainer}>

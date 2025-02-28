@@ -1,57 +1,49 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Updates from "expo-updates";
+import React, { useState, useEffect } from "react"
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import * as Updates from "expo-updates"
 
 const UpdateNotification = () => {
-  const [showUpdate, setShowUpdate] = useState(false);
-  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [showUpdate, setShowUpdate] = useState(false)
+  const [updateAvailable, setUpdateAvailable] = useState(false)
 
   useEffect(() => {
     const checkForUpdates = async () => {
       try {
-        const { isAvailable } = await Updates.checkForUpdateAsync();
+        const { isAvailable } = await Updates.checkForUpdateAsync()
         if (isAvailable) {
-          setUpdateAvailable(true);
-          const dismissed = await AsyncStorage.getItem("updateDismissed");
+          setUpdateAvailable(true)
+          const dismissed = await AsyncStorage.getItem("updateDismissed")
           if (!dismissed) {
-            setShowUpdate(true);
+            setShowUpdate(true)
           }
         }
       } catch (error) {
-        console.error("Error checking for updates:", error);
+        console.error("Error checking for updates:", error)
       }
-    };
+    }
 
-    checkForUpdates();
-  }, []);
-
-  const handleDismiss = async () => {
-    await AsyncStorage.setItem("updateDismissed", "true");
-    setShowUpdate(false);
-  };
+    checkForUpdates()
+  }, [])
 
   const handleUpdate = async () => {
-    await Updates.fetchUpdateAsync();
-    await Updates.reloadAsync();
-  };
+    await Updates.fetchUpdateAsync()
+    await Updates.reloadAsync()
+  }
 
   if (!showUpdate || !updateAvailable) {
-    return null;
+    return null
   }
 
   return (
     <View style={styles.updateContainer}>
-      <Text style={styles.updateText}>A new update is available!</Text>
+      <Text style={styles.updateText}>New update available!</Text>
       <TouchableOpacity onPress={handleUpdate} style={styles.updateButton}>
         <Text style={styles.updateButtonText}>Update Now</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={handleDismiss} style={styles.dismissButton}>
-        <Text style={styles.dismissButtonText}>✕</Text>
-      </TouchableOpacity>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   updateContainer: {
@@ -63,11 +55,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginHorizontal: 10,
     marginTop: 10,
+    position: "absolute",
+    zIndex: 9,
+    width: "100%",
   },
   updateText: {
     color: "white",
     fontFamily: "Poppins_500Medium",
-    fontSize: 16,
+    fontSize: 15,
+    paddingLeft: 5,
   },
   updateButton: {
     backgroundColor: "white",
@@ -81,13 +77,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   dismissButton: {
-    marginLeft: 10,
+    marginLeft: 5,
+    paddingRight: 10,
   },
   dismissButtonText: {
     color: "white",
     fontFamily: "Poppins_500Medium",
     fontSize: 16,
+    fontWeight: "bold",
   },
-});
+})
 
-export default UpdateNotification;
+export default UpdateNotification

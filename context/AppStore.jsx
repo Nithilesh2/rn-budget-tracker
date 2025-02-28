@@ -16,6 +16,7 @@ const AppStore = ({ children }) => {
   const [selectedIcon, setSelectedIcon] = useState(1)
   const [storedUserId, setStoredUserId] = useState(null)
   const [pushToken, setPushToken] = useState(null)
+  const [currencyType, setCurrencyType] = useState("")
   const router = useRouter()
 
   // Account tab state
@@ -81,6 +82,7 @@ const AppStore = ({ children }) => {
         setUserExpenses(userData.totalExpensesAmount)
         setBudget(userData.budget || 0)
         setNotifications(userData.notifications || [])
+        setCurrencyType(userData.currency)
         const userDataExpenses = userData.expenses || []
         setUserData(userDataExpenses)
       } else {
@@ -111,6 +113,7 @@ const AppStore = ({ children }) => {
           const userData = userDoc.data()
           setName(userData.name || "")
           setEmail(userData.email || "")
+          setCurrencyType(userData.currency || "INR")
 
           const iconIndex = userData.userIconNumber
           if (icons[iconIndex]) {
@@ -474,6 +477,7 @@ const handleContinue = async () => {
         setStoredUserId,
         storedUserId,
         pushToken,
+        currencyType,
 
         // ACCOUNT TAB
         name,

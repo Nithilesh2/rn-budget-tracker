@@ -16,9 +16,10 @@ import IconMap from "../../../assets/IconMap/IconMap"
 import data from "./../../../components/IconsData"
 import LottieView from "lottie-react-native"
 import { useRouter } from "expo-router"
+import currencySymbols from './../../../components/CurrencySymbols';
 
 const Transactions = () => {
-  const { userData, refreshing, setRefreshing, fetchData } =
+  const { userData, refreshing, setRefreshing, fetchData, currencyType } =
     useContext(AppContext)
   const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
@@ -173,8 +174,12 @@ const Transactions = () => {
                             ]}
                           >
                             {transaction.method === "Expense"
-                              ? `- ₹${transaction.amount}`
-                              : `+ ₹${transaction.amount}`}
+                              ? `- ${currencySymbols[currencyType] || "₹"}${
+                                  transaction.amount
+                                }`
+                              : `+ ${currencySymbols[currencyType] || "₹"}${
+                                  transaction.amount
+                                }`}
                           </Text>
                           <Text style={styles.recentTransactionsItemTime}>
                             {transaction.timestamp?.seconds

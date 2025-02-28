@@ -23,6 +23,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore"
 import Toast from "react-native-root-toast"
 import { AppContext } from "../../../context/AppContext"
 import * as LocalAuthentication from "expo-local-authentication"
+import ArrowLeftIcon from "./../../../assets/icons/ArrowLeft"
 
 const PinLockScreen = () => {
   const { options } = useContext(AppContext)
@@ -32,7 +33,7 @@ const PinLockScreen = () => {
   const [step, setStep] = useState("loading")
   const [loading, setLoading] = useState(false)
   const [attemptCount, setAttemptCount] = useState(3)
-  const [securityType, setSecurityType] = useState(null)
+  const [securityType, setSecurityType] = useState(pin)
   const router = useRouter()
 
   useFonts({
@@ -66,7 +67,10 @@ const PinLockScreen = () => {
 
     if (userDocSnap.exists()) {
       const userData = userDocSnap.data()
-      if (userData.security) {
+      if (userData.isNewUser) {
+        setStep("setup")
+        setSecurityType("pin")
+      } else if (userData.security) {
         if (userData.security.pin?.enabled) {
           setSecurityType("pin")
           setSavedPin(userData.security.pin.value)
@@ -129,7 +133,10 @@ const PinLockScreen = () => {
         await AsyncStorage.setItem("userPin", pin)
         await setDoc(
           userDocRef,
-          { security: { pin: { enabled: true, value: pin } } },
+          {
+            security: { pin: { enabled: true, value: pin } },
+            isNewUser: false,
+          },
           { merge: true }
         )
         Toast.show("PIN set successfully", options)
@@ -179,7 +186,6 @@ const PinLockScreen = () => {
     if (result.success) {
       router.replace("/onboarding/tabs")
     } else {
-      console.log("Biometric authentication failed")
       Alert.alert(
         "Authentication Failed",
         "You must authenticate to use the app. The app will now close.",
@@ -187,7 +193,6 @@ const PinLockScreen = () => {
           {
             text: "OK",
             onPress: () => {
-              console.log("Closing the app...")
               BackHandler.exitApp()
             },
           },

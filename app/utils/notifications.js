@@ -27,7 +27,6 @@ export async function registerForPushNotificationsAsync() {
   }
 
   if (finalStatus !== "granted") {
-    Alert.alert("Permission Denied", "Enable push notifications in settings.");
     return null;
   }
 

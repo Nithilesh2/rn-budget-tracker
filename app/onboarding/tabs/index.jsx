@@ -25,6 +25,7 @@ import IconMap from "../../../assets/IconMap/IconMap"
 import data from "../../../components/IconsData"
 import LottieView from "lottie-react-native"
 import UpdateNotification from "./../../../components/UpdateNotification"
+import currencySymbols from './../../../components/CurrencySymbols';
 
 const index = () => {
   const {
@@ -37,6 +38,7 @@ const index = () => {
     budget,
     selectedIcon,
     setStoredUserId,
+    currencyType,
   } = useContext(AppContext)
   const router = useRouter()
   const date = new Date()
@@ -134,7 +136,7 @@ const index = () => {
                   </TouchableOpacity>
                 </View>
               ) : (
-                `₹${budget}`
+                `${currencySymbols[currencyType] || "₹"}${budget}`
               )}
             </Text>
           </View>
@@ -147,7 +149,7 @@ const index = () => {
               <View style={styles.boxRight}>
                 <Text style={styles.boxRightText}>Income</Text>
                 <Text style={styles.boxRightAmount}>
-                  ₹
+                  {currencySymbols[currencyType] || "₹"}
                   {userIncome === undefined ||
                   userIncome === null ||
                   userIncome === 0
@@ -164,7 +166,7 @@ const index = () => {
               <View style={styles.creditBoxRight}>
                 <Text style={styles.boxRightText}>Expenses</Text>
                 <Text style={styles.boxRightAmount}>
-                  ₹
+                  {currencySymbols[currencyType] || "₹"}
                   {userExpenses === undefined ||
                   userExpenses === null ||
                   userExpenses === 0
@@ -267,8 +269,12 @@ const index = () => {
                             ]}
                           >
                             {transaction.method === "Expense"
-                              ? `- ₹${transaction.amount}`
-                              : `+ ₹${transaction.amount}`}
+                              ? `- ${currencySymbols[currencyType] || "₹"}${
+                                  transaction.amount
+                                }`
+                              : `+ ${currencySymbols[currencyType] || "₹"}${
+                                  transaction.amount
+                                }`}
                           </Text>
                           <Text style={styles.recentTransactionsItemTime}>
                             {transaction.timestamp?.seconds

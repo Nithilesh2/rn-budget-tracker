@@ -18,9 +18,10 @@ import { useRouter } from "expo-router"
 import Toast from "react-native-root-toast"
 import { AppContext } from "../../../../context/AppContext"
 import { ActivityIndicator } from "react-native"
+import currencySymbols from "../../../../components/CurrencySymbols"
 
 const setBudget = () => {
-  const { options, handleContinue, setBudget, budgetLoading } =
+  const { options, handleContinue, setBudget, budgetLoading, currencyType } =
     useContext(AppContext)
   const router = useRouter()
   useFonts({
@@ -51,7 +52,9 @@ const setBudget = () => {
           Enter your desired monthly budget:
         </Text>
         <View style={styles.amountInputContainer}>
-          <Text style={styles.rupeeSymbolText}>₹</Text>
+          <Text style={styles.rupeeSymbolText}>
+            {currencySymbols[currencyType] || "₹"}
+          </Text>
           <TextInput
             placeholder="0"
             style={styles.amountInput}

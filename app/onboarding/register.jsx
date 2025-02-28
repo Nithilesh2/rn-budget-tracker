@@ -17,7 +17,7 @@ import {
   Poppins_500Medium,
   Poppins_600SemiBold,
 } from "@expo-google-fonts/poppins"
-import { auth, firestore, provider } from "../../firebase/firebaseConfig"
+import { auth, firestore } from "../../firebase/firebaseConfig"
 import Toast from "react-native-root-toast"
 import { createUserWithEmailAndPassword } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
@@ -77,6 +77,13 @@ const Register = () => {
             email: trimmedEmail,
             uid: user.uid,
             userIconNumber: randomNumberForIcon,
+            security: {
+              faceid: { enabled: false },
+              fingerprint: { enabled: false },
+              pin: { enabled: false, value: null },
+            },
+            isNewUser: true,
+            currency: 'INR'
           })
           Toast.show("User registered successfully", options)
           router.push("/onboarding/login")

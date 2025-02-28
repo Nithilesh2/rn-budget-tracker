@@ -24,6 +24,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { firestore } from "../../../firebase/firebaseConfig"
 import Toast from "react-native-root-toast"
 import Modal from "react-native-modal"
+import currencySymbols from "./../../../components/CurrencySymbols"
 
 const DetailedData = () => {
   const {
@@ -33,6 +34,7 @@ const DetailedData = () => {
     handleDeleteTransaction,
     setModalVisible,
     isModalVisible,
+    currencyType,
   } = useContext(AppContext)
   const { id } = useLocalSearchParams()
   const router = useRouter()
@@ -108,7 +110,7 @@ const DetailedData = () => {
         if (index !== -1) {
           expenses[index] = {
             ...expenses[index],
-            description: description, 
+            description: description,
           }
           await updateDoc(userDocRef, { expenses })
 
@@ -166,7 +168,8 @@ const DetailedData = () => {
             <View style={styles.bTop}>
               <View style={styles.amountContainer}>
                 <Text style={styles.amountText}>
-                  ₹{transaction?.amount || 0}
+                  {currencySymbols[currencyType] || "₹"}
+                  {transaction?.amount || 0}
                 </Text>
               </View>
               <View style={styles.dateContainer}>
