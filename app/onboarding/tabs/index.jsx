@@ -8,10 +8,8 @@ import {
   Text,
   TouchableOpacity,
   View,
-  BackHandler,
-  ToastAndroid,
 } from "react-native"
-import React, { useCallback, useContext, useState, useEffect } from "react"
+import React, { useCallback, useContext, useState } from "react"
 import NotificationIcon from "./../../../assets/icons/Bell"
 import {
   Poppins_500Medium,
@@ -26,6 +24,7 @@ import { AppContext } from "../../../context/AppContext"
 import IconMap from "../../../assets/IconMap/IconMap"
 import data from "../../../components/IconsData"
 import LottieView from "lottie-react-native"
+import UpdateNotification from "./../../../components/UpdateNotification"
 
 const index = () => {
   const {
@@ -40,7 +39,6 @@ const index = () => {
     setStoredUserId,
   } = useContext(AppContext)
   const router = useRouter()
-  const [exitApp, setExitApp] = useState(false)
   const date = new Date()
   const options = { month: "long" }
   const monthName = new Intl.DateTimeFormat("en-US", options).format(date)
@@ -49,31 +47,6 @@ const index = () => {
     Poppins_500Medium,
     Ubuntu_500Medium,
   })
-
-  useEffect(() => {
-    const backAction = () => {
-      if (exitApp) {
-        BackHandler.exitApp()
-        return true
-      } else {
-        setExitApp(true)
-        ToastAndroid.show("Press back again to exit", ToastAndroid.SHORT)
-
-        setTimeout(() => {
-          setExitApp(false)
-        }, 2000)
-
-        return true
-      }
-    }
-
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      backAction
-    )
-
-    return () => backHandler.remove()
-  }, [exitApp])
 
   useFocusEffect(
     useCallback(() => {
@@ -115,6 +88,7 @@ const index = () => {
             />
           }
         >
+          <UpdateNotification />
           <View style={styles.top}>
             <View style={styles.topLeft}>
               <Image source={selectedIcon} style={styles.userImg} />
@@ -129,6 +103,20 @@ const index = () => {
                 color="#7F3DFF"
                 fill="#7F3DFF"
                 onPress={() => router.push("/onboarding/tabs/notification")}
+              />
+              <Text
+                style={{
+                  fontSize: 24,
+                  position: "absolute",
+                  backgroundColor: "red",
+                  height: 10,
+                  width: 10,
+                  right: 3,
+                  bottom: 23,
+                  borderRadius: 10,
+                  textAlign: "center",
+                  zIndex: -1,
+                }}
               />
             </View>
           </View>

@@ -24,7 +24,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore"
 import EyeCloseIcon from "./../../../assets/icons/EyeClose"
 import EyeOpenIcon from "./../../../assets/icons/EyeOpen"
 import LeftArrowIcon from "../../../assets/icons/LeftArrow"
-import { AppContext } from "../../../context/AppContext";
+import { AppContext } from "../../../context/AppContext"
 
 const forgotPin = () => {
   const { options } = useContext(AppContext)
@@ -63,10 +63,24 @@ const forgotPin = () => {
       const userRef = doc(firestore, "users", user.uid)
       const userDoc = await getDoc(userRef)
       if (userDoc.exists()) {
-        await setDoc(userRef, { pin }, { merge: true })
+        await setDoc(
+          userRef,
+          {
+            security: {
+              pin: {
+                value: pin,
+              },
+            },
+          },
+          { merge: true }
+        )
         await AsyncStorage.setItem("userPin", pin)
         router.replace("/onboarding/pinSetup/")
         Toast.show("Pin changed successfully!", options)
+        setEmail("")
+        setPassword("")
+        setPin("")
+        setRePin("")
       } else {
         Toast.show("User not found in database!", options)
       }
@@ -175,7 +189,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     justifyContent: "center",
     marginLeft: 10,
-    paddingHorizontal: 20
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 30,
