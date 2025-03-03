@@ -6,91 +6,74 @@ import {
   View,
   TouchableOpacity,
   FlatList,
-} from "react-native"
-import React, { useContext, useState, useEffect } from "react"
-import { SafeAreaView } from "react-native"
-import ArrowLeftIcon from "../../../assets/icons/ArrowLeft"
-import { useFonts } from "expo-font"
+} from "react-native";
+import React, { useContext, useState, useMemo } from "react";
+import { SafeAreaView } from "react-native";
+import ArrowLeftIcon from "../../../assets/icons/ArrowLeft";
+import { useFonts } from "expo-font";
 import {
   Poppins_400Regular,
   Poppins_500Medium,
-} from "@expo-google-fonts/poppins"
-import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu"
-import MenuIcon from "../../../assets/icons/Menu"
-import LottieView from "lottie-react-native"
-import { useRouter } from "expo-router"
-import { AppContext } from "../../../context/AppContext"
-import { doc, updateDoc, getDoc } from "firebase/firestore"
-import { firestore } from "../../../firebase/firebaseConfig"
+} from "@expo-google-fonts/poppins";
+import { Ubuntu_500Medium } from "@expo-google-fonts/ubuntu";
+import MenuIcon from "../../../assets/icons/Menu";
+import LottieView from "lottie-react-native";
+import { useRouter } from "expo-router";
+import { AppContext } from "../../../context/AppContext";
+import { doc, updateDoc } from "firebase/firestore";
+import { firestore } from "../../../firebase/firebaseConfig";
 
 const Notification = () => {
-  const { notifications, storedUserId, setNotifications } =
-    useContext(AppContext)
-  const [menuVisible, setMenuVisible] = useState(false)
-  const router = useRouter()
+  const { notifications, storedUserId, setNotifications } = useContext(AppContext);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const router = useRouter();
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_500Medium,
     Ubuntu_500Medium,
-  })
+  });
 
   const handleMarkAllAsRead = async () => {
     try {
-      const userDocRef = doc(firestore, "users", storedUserId)
+      const userDocRef = doc(firestore, "users", storedUserId);
       const updatedNotifications = notifications.map((notification) => ({
         ...notification,
         read: true,
-      }))
-      await updateDoc(userDocRef, { notifications: updatedNotifications })
-      setNotifications(updatedNotifications)
-      setMenuVisible(false)
+      }));
+      await updateDoc(userDocRef, { notifications: updatedNotifications });
+      setNotifications(updatedNotifications);
+      setMenuVisible(false);
     } catch (error) {
-      console.error("Error marking all as read:", error)
+      console.error("Error marking all as read:", error);
     }
-  }
+  };
 
   const handleRemoveAll = async () => {
     try {
-      const userDocRef = doc(firestore, "users", storedUserId)
-      await updateDoc(userDocRef, { notifications: [] })
-      setNotifications([])
-      setMenuVisible(false)
+      const userDocRef = doc(firestore, "users", storedUserId);
+      await updateDoc(userDocRef, { notifications: [] });
+      setNotifications([]);
+      setMenuVisible(false);
     } catch (error) {
-      console.error("Error removing all notifications:", error)
+      console.error("Error removing all notifications:", error);
     }
-  }
+  };
 
   const handleMarkAsRead = async (id) => {
     try {
-      const userDocRef = doc(firestore, "users", storedUserId)
+      const userDocRef = doc(firestore, "users", storedUserId);
       const updatedNotifications = notifications.map((notification) =>
         notification.id === id ? { ...notification, read: true } : notification
-      )
-      await updateDoc(userDocRef, { notifications: updatedNotifications })
-      setNotifications(updatedNotifications)
+      );
+      await updateDoc(userDocRef, { notifications: updatedNotifications });
+      setNotifications(updatedNotifications);
     } catch (error) {
-      console.error("Error marking notification as read:", error)
+      console.error("Error marking notification as read:", error);
     }
-  }
+  };
 
   const renderNotificationItem = ({ item }) => {
-    const notificationDate = item.timestamp?.toDate
-      ? item.timestamp.toDate().toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        })
-      : "Unknown date"
-
-    const notificationTime = item.timestamp?.toDate
-      ? item.timestamp.toDate().toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        })
-      : "Unknown time"
-
     return (
       <TouchableOpacity
         style={styles.notificationBox}
@@ -120,83 +103,75 @@ const Notification = () => {
             {item.message}
           </Text>
         </View>
-        <View style={styles.time}>
-          <Text style={styles.timeText}>{notificationTime}</Text>
-          <Text style={styles.timeText}>{notificationDate}</Text>
-        </View>
       </TouchableOpacity>
-    )
-  }
+    );
+  };
+
+  const NoNotificationsComponent = useMemo(() => {
+    return (
+      <View style={styles.noNewNotificationsContainer}>
+        <LottieView
+          source={require("../../../assets/Animations/noNotifications.json")}
+          autoPlay
+          loop={false}
+          style={{ width: 350, height: 350 }}
+        />
+        <Text style={styles.noNewNotificationsText}>No new Notifications.</Text>
+      </View>
+    );
+  }, []);
 
   if (!fontsLoaded) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#7F3DFF" />
       </View>
-    )
+    );
   }
 
   return (
-    <>
-      <SafeAreaView style={styles.container}>
-        <View style={styles.top}>
-          <ArrowLeftIcon
-            height={30}
-            width={30}
-            color="black"
-            strokeWidth={2}
-            onPress={() => router.back()}
-          />
-          <Text style={styles.title}>Notifications</Text>
-          <TouchableOpacity onPress={() => setMenuVisible(!menuVisible)}>
-            <MenuIcon width={30} height={30} color="black" strokeWidth="2" />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.top}>
+        <ArrowLeftIcon
+          height={30}
+          width={30}
+          color="black"
+          strokeWidth={2}
+          onPress={() => router.back()}
+        />
+        <Text style={styles.title}>Notifications</Text>
+        <TouchableOpacity onPress={() => setMenuVisible((prev) => !prev)}>
+          <MenuIcon width={30} height={30} color="black" strokeWidth="2" />
+        </TouchableOpacity>
+      </View>
+
+      {menuVisible && (
+        <View style={styles.dropdownMenu}>
+          <TouchableOpacity style={styles.menuItemOne} onPress={handleMarkAllAsRead}>
+            <Text style={styles.menuText}>Mark all as read</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItemTwo} onPress={handleRemoveAll}>
+            <Text style={styles.menuText}>Remove all</Text>
           </TouchableOpacity>
         </View>
+      )}
 
-        {menuVisible && (
-          <View style={styles.dropdownMenu}>
-            <TouchableOpacity
-              style={styles.menuItemOne}
-              onPress={handleMarkAllAsRead}
-            >
-              <Text style={styles.menuText}>Mark all as read</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItemTwo}
-              onPress={handleRemoveAll}
-            >
-              <Text style={styles.menuText}>Remove all</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
+      {notifications.length === 0 ? (
+        NoNotificationsComponent
+      ) : (
         <FlatList
           data={notifications}
           renderItem={renderNotificationItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.notificationContainer}
-          ListEmptyComponent={() => (
-            <>
-              <View style={styles.noNewNotificationsContainer}>
-                <LottieView
-                  source={require("../../../assets/Animations/noNotifications.json")}
-                  autoPlay
-                  loop={false}
-                  style={{ width: 350, height: 350 }}
-                />
-                <Text style={styles.noNewNotificationsText}>
-                  No new Notifications.
-                </Text>
-              </View>
-            </>
-          )}
         />
-      </SafeAreaView>
-    </>
-  )
-}
+      )}
+    </SafeAreaView>
+  );
+};
 
-export default Notification
+export default Notification;
+
 
 const styles = StyleSheet.create({
   loadingContainer: {

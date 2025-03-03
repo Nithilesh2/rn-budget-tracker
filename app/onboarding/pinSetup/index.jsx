@@ -11,7 +11,6 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useFocusEffect, useRouter } from "expo-router"
 import DeleteIcon from "./../../../assets/icons/Delete"
-import TickIcon from "./../../../assets/icons/Tick"
 import { useFonts } from "expo-font"
 import {
   Poppins_400Regular,
@@ -23,7 +22,6 @@ import { doc, getDoc, setDoc } from "firebase/firestore"
 import Toast from "react-native-root-toast"
 import { AppContext } from "../../../context/AppContext"
 import * as LocalAuthentication from "expo-local-authentication"
-import ArrowLeftIcon from "./../../../assets/icons/ArrowLeft"
 
 const PinLockScreen = () => {
   const { options } = useContext(AppContext)
@@ -48,9 +46,12 @@ const PinLockScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
-      checkExistingPin()
+      (async () => {
+        await checkExistingPin();
+      })();
     }, [])
-  )
+  );
+  
 
   useEffect(() => {
     if (securityType === "fingerprint" || securityType === "faceid") {
@@ -242,7 +243,7 @@ const PinLockScreen = () => {
 
           {securityType === "pin" ? (
             <View style={styles.keypad}>
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, "del", 0, "ok"].map((key) => (
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, "del", 0,""].map((key) => (
                 <TouchableOpacity
                   key={key}
                   style={styles.key}
@@ -264,16 +265,7 @@ const PinLockScreen = () => {
                         strokeWidth={2}
                         style={styles.deleteIcon}
                       />
-                    ) : key === "ok" ? (
-                      <TickIcon
-                        width={30}
-                        height={30}
-                        color="white"
-                        strokeWidth={3}
-                      />
-                    ) : (
-                      key
-                    )}
+                    ) : key}
                   </Text>
                 </TouchableOpacity>
               ))}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { AppContext } from "./AppContext"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
@@ -67,32 +67,32 @@ const AppStore = ({ children }) => {
   }
 
   // Fetch user data
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const userId = await AsyncStorage.getItem("userId")
+      const userId = await AsyncStorage.getItem("userId");
       if (!userId) {
-        router.push("onboarding/login")
-        return
+        router.push("onboarding/login");
+        return;
       }
-
-      const userDoc = await getDoc(doc(firestore, "users", storedUserId))
+  
+      const userDoc = await getDoc(doc(firestore, "users", storedUserId));
       if (userDoc.exists()) {
-        const userData = userDoc.data()
-        setUserIncome(userData.totalIncomeAmount)
-        setUserExpenses(userData.totalExpensesAmount)
-        setBudget(userData.budget || 0)
-        setNotifications(userData.notifications || [])
-        setCurrencyType(userData.currency)
-        const userDataExpenses = userData.expenses || []
-        setUserData(userDataExpenses)
+        const userData = userDoc.data();
+        setUserIncome(userData.totalIncomeAmount);
+        setUserExpenses(userData.totalExpensesAmount);
+        setBudget(userData.budget || 0);
+        setNotifications(userData.notifications || []);
+        setCurrencyType(userData.currency);
+        const userDataExpenses = userData.expenses || [];
+        setUserData(userDataExpenses);
       } else {
-        Toast.show("User document does not exist", options)
+        Toast.show("User document does not exist", options);
       }
     } catch (error) {
-      console.error("Error fetching data:", error)
-      Toast.show("Failed to load data", options)
+      console.error("Error fetching data:", error);
+      Toast.show("Failed to load data", options);
     }
-  }
+  }, [storedUserId, router, options]); // Add dependencies if needed
 
   // Fetch user data on component mount
   useEffect(() => {
@@ -167,6 +167,7 @@ const AppStore = ({ children }) => {
           type: "Profile Update",
           message: "Your profile icon has been updated.",
           timestamp: new Date(),
+          read: false
         })
         changesMade = true
       }
@@ -182,6 +183,7 @@ const AppStore = ({ children }) => {
             type: "Profile Update",
             message: `Your profile name has been updated to "${name.trim()}".`,
             timestamp: new Date(),
+            read: false
           })
           changesMade = true
         } else {
@@ -214,6 +216,7 @@ const AppStore = ({ children }) => {
             type: "Profile Update",
             message: "Your password has been updated.",
             timestamp: new Date(),
+            read: false
           })
           changesMade = true
         } catch (error) {
@@ -369,6 +372,7 @@ const handleContinue = async () => {
         type: "Budget Changed",
         message: `Your budget has been updated to ₹${budget}.`,
         timestamp: new Date(),
+        read: false
       });
 
       await updateDoc(userDocRef, { notifications });

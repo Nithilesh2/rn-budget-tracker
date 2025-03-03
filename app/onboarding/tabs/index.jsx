@@ -25,7 +25,7 @@ import IconMap from "../../../assets/IconMap/IconMap"
 import data from "../../../components/IconsData"
 import LottieView from "lottie-react-native"
 import UpdateNotification from "./../../../components/UpdateNotification"
-import currencySymbols from './../../../components/CurrencySymbols';
+import currencySymbols from "./../../../components/CurrencySymbols"
 
 const index = () => {
   const {
@@ -39,6 +39,7 @@ const index = () => {
     selectedIcon,
     setStoredUserId,
     currencyType,
+    notifications,
   } = useContext(AppContext)
   const router = useRouter()
   const date = new Date()
@@ -50,6 +51,7 @@ const index = () => {
     Ubuntu_500Medium,
   })
 
+  const unreadNotifications = notifications.some((notif) => !notif.read)
   useFocusEffect(
     useCallback(() => {
       const loadData = async () => {
@@ -98,28 +100,20 @@ const index = () => {
             <View style={styles.topMiddle}>
               <Text style={styles.monethSpents}>{monthName}</Text>
             </View>
-            <View style={styles.topRight}>
-              <NotificationIcon
-                height="32"
-                width="30"
-                color="#7F3DFF"
-                fill="#7F3DFF"
+            <View style={styles.notificationIconWrapper}>
+              <TouchableOpacity
                 onPress={() => router.push("/onboarding/tabs/notification")}
-              />
-              <Text
-                style={{
-                  fontSize: 24,
-                  position: "absolute",
-                  backgroundColor: "red",
-                  height: 10,
-                  width: 10,
-                  right: 3,
-                  bottom: 23,
-                  borderRadius: 10,
-                  textAlign: "center",
-                  zIndex: -1,
-                }}
-              />
+              >
+                <NotificationIcon
+                  height="32"
+                  width="30"
+                  color="#7F3DFF"
+                  fill="#7F3DFF"
+                />
+              </TouchableOpacity>
+
+              {/* Red Dot for Unread Notifications */}
+              {unreadNotifications && <View style={styles.redDot} />}
             </View>
           </View>
           <View style={styles.accBal}>
@@ -326,6 +320,18 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: 6,
     overflow: "hidden",
+  },
+  notificationIconWrapper: {
+    position: "relative",
+  },
+  redDot: {
+    position: "absolute",
+    top: 2,
+    right: 2,
+    backgroundColor: "red",
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   userImg: {
     width: 50,
