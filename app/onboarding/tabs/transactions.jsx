@@ -25,7 +25,7 @@ const Transactions = () => {
     setRefreshing,
     fetchData,
     currencyType,
-    storedUserId
+    storedUserId,
   } = useContext(AppContext)
   const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
@@ -69,9 +69,9 @@ const Transactions = () => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchData();
+      fetchData()
     }, [fetchData])
-  );
+  )
 
   const handleRefreshing = () => {
     setRefreshing(true)
@@ -117,7 +117,7 @@ const Transactions = () => {
               style={styles.searchContainer}
               inputStyle={{
                 fontFamily: "Poppins_400Regular",
-                paddingBottom: 5,
+                paddingBottom: 16,
               }}
             />
           </View>
@@ -182,12 +182,12 @@ const Transactions = () => {
                             ]}
                           >
                             {transaction.method === "Expense"
-                              ? `- ${currencySymbols[currencyType] || "₹"}${
-                                  transaction.amount
-                                }`
-                              : `+ ${currencySymbols[currencyType] || "₹"}${
-                                  transaction.amount
-                                }`}
+                              ? `- ${
+                                  currencySymbols[currencyType] || "₹"
+                                }${Math.ceil(transaction.amount)}`
+                              : `+ ${
+                                  currencySymbols[currencyType] || "₹"
+                                }${Math.ceil(transaction.amount)}`}
                           </Text>
                           <Text style={styles.recentTransactionsItemTime}>
                             {transaction.timestamp?.seconds
@@ -236,6 +236,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 15,
     borderWidth: 1,
+    height: 50,
   },
   dateTitle: {
     fontSize: 18,

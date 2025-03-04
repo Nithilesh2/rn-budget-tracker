@@ -23,7 +23,7 @@ import Toast from "react-native-root-toast"
 import { AppContext } from "../../../../../context/AppContext"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { firestore } from "../../../../../firebase/firebaseConfig"
-import { ScrollView } from "react-native";
+import { ScrollView } from "react-native"
 
 const { height } = Dimensions.get("screen")
 
@@ -72,6 +72,7 @@ const Currency = () => {
   })
 
   useEffect(() => {
+    Toast.show("Values may vary based on the selected currency.", options)
     const loadCurrency = async () => {
       try {
         if (!storedUserId) {
@@ -114,6 +115,28 @@ const Currency = () => {
     storeCurrency()
   }, [savedCurrency])
 
+  const fetchExchangeRates = async (baseCurrency) => {
+    const url = `https://v6.exchangerate-api.com/v6/3c6ebfaa3c3f9e1b1de34ffa/latest/${baseCurrency}`
+    try {
+      const response = await fetch(url)
+      const data = await response.json()
+
+      if (data.result !== "success" || !data.conversion_rates) {
+        throw new Error("Invalid exchange rate data received")
+      }
+      return data.conversion_rates
+    } catch (error) {
+      console.error("Error fetching exchange rates:", error)
+      return null
+    }
+  }
+
+  const convertCurrency = (amount, fromCurrency, toCurrency, exchangeRates) => {
+    if (fromCurrency === toCurrency) return amount
+    const rate = exchangeRates[toCurrency] / exchangeRates[fromCurrency]
+    return amount * rate
+  }
+
   const handleCurrencySelect = (currencyCode) => {
     setSelectedCurrency(currencyCode)
   }
@@ -125,16 +148,76 @@ const Currency = () => {
         return
       }
       setLoading(true)
+
       const userRef = doc(firestore, "users", storedUserId)
-      await updateDoc(userRef, { currency: selectedCurrency })
+      const userDoc = await getDoc(userRef)
+
+      if (!userDoc.exists()) {
+        Toast.show("User document not found", options)
+        return
+      }
+
+      const userData = userDoc.data()
+      const {
+        budget,
+        expenses,
+        totalExpensesAmount,
+        totalIncomeAmount,
+        currency: currentCurrency,
+      } = userData
+
+      const exchangeRates = await fetchExchangeRates(currentCurrency)
+      if (!exchangeRates) {
+        Toast.show("Failed to fetch exchange rates", options)
+        return
+      }
+
+      const convertedBudget = convertCurrency(
+        budget,
+        currentCurrency,
+        selectedCurrency,
+        exchangeRates
+      )
+
+      const convertedExpenses = expenses.map((expense) => ({
+        ...expense,
+        amount: convertCurrency(
+          expense.amount,
+          currentCurrency,
+          selectedCurrency,
+          exchangeRates
+        ),
+      }))
+
+      const convertedTotalExpenses = convertCurrency(
+        totalExpensesAmount,
+        currentCurrency,
+        selectedCurrency,
+        exchangeRates
+      )
+
+      const convertedTotalIncome = convertCurrency(
+        totalIncomeAmount,
+        currentCurrency,
+        selectedCurrency,
+        exchangeRates
+      )
+
+      await updateDoc(userRef, {
+        currency: selectedCurrency,
+        budget: convertedBudget,
+        expenses: convertedExpenses,
+        totalExpensesAmount: convertedTotalExpenses,
+        totalIncomeAmount: convertedTotalIncome,
+        prevCurrency: savedCurrency,
+      })
 
       setSavedCurrency(selectedCurrency)
-
       Toast.show("Currency updated successfully!", options)
       router.back()
-      setLoading(false)
     } catch (error) {
-      console.log(error)
+      console.log("Error updating currency:", error)
+      Toast.show("Failed to update currency", options)
     } finally {
       setLoading(false)
     }
@@ -159,21 +242,21 @@ const Currency = () => {
       </View>
 
       <ScrollView style={styles.currencyList}>
-      {Object.entries(currencies).map(([countryName, currencyCode]) => (
-        <Pressable
-          key={currencyCode}
-          style={styles.currencyItem}
-          onPress={() => handleCurrencySelect(currencyCode)}
-        >
-          <Text style={styles.currencyText}>{countryName}</Text>
-          <View style={styles.radioOuter}>
-            {selectedCurrency === currencyCode && (
-              <View style={styles.radioInner} />
-            )}
-          </View>
-        </Pressable>
-      ))}
-    </ScrollView>
+        {Object.entries(currencies).map(([countryName, currencyCode]) => (
+          <Pressable
+            key={currencyCode}
+            style={styles.currencyItem}
+            onPress={() => handleCurrencySelect(currencyCode)}
+          >
+            <Text style={styles.currencyText}>{countryName}</Text>
+            <View style={styles.radioOuter}>
+              {selectedCurrency === currencyCode && (
+                <View style={styles.radioInner} />
+              )}
+            </View>
+          </Pressable>
+        ))}
+      </ScrollView>
 
       <TouchableOpacity
         style={styles.saveButton}
@@ -219,7 +302,7 @@ const styles = StyleSheet.create({
   currencyList: {
     marginTop: 30,
     paddingHorizontal: 25,
-    marginBottom: 65
+    marginBottom: 65,
   },
   currencyItem: {
     flexDirection: "row",

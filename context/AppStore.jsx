@@ -92,7 +92,7 @@ const AppStore = ({ children }) => {
       console.error("Error fetching data:", error);
       Toast.show("Failed to load data", options);
     }
-  }, [storedUserId, router, options]); // Add dependencies if needed
+  }, [storedUserId, router, options]);
 
   // Fetch user data on component mount
   useEffect(() => {
@@ -335,60 +335,60 @@ const AppStore = ({ children }) => {
   }
 
 // Handle budget update
-const handleContinue = async () => {
-  try {
-    if (!storedUserId) {
-      Toast.show("User ID is missing", options);
-      router.push("onboarding/login");
-      return;
+  const handleContinue = async () => {
+    try {
+      if (!storedUserId) {
+        Toast.show("User ID is missing", options);
+        router.push("onboarding/login");
+        return;
+      }
+
+      if (!budget || isNaN(budget) || budget <= 0) {
+        Toast.show("Please enter a valid budget amount", options);
+        return;
+      }
+
+      setBudgetLoading(true);
+      const userDocRef = doc(firestore, "users", storedUserId);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        await updateDoc(userDocRef, { budget: Number(budget) });
+
+        setBudget(Number(budget));
+        Toast.show("Budget updated successfully", options);
+
+        // Send push notification (uncomment if pushToken is available)
+        // notifications.sendPushNotification(
+        //   pushToken,
+        //   "Budget Changed",
+        //   `Your budget has been updated to ₹${budget}`
+        // );
+
+        const notifications = userData.notifications || [];
+        notifications.push({
+          id: uuidv4(),
+          type: "Budget Changed",
+          message: `Your budget has been updated to ₹${budget}.`,
+          timestamp: new Date(),
+          read: false
+        });
+
+        await updateDoc(userDocRef, { notifications });
+
+        router.back();
+      } else {
+        Toast.show("User document does not exist", options);
+        router.back();
+      }
+    } catch (error) {
+      console.error(error);
+      Toast.show("Failed to set Budget", options);
+    } finally {
+      setBudgetLoading(false);
     }
-
-    if (!budget || isNaN(budget) || budget <= 0) {
-      Toast.show("Please enter a valid budget amount", options);
-      return;
-    }
-
-    setBudgetLoading(true);
-    const userDocRef = doc(firestore, "users", storedUserId);
-    const userDocSnap = await getDoc(userDocRef);
-
-    if (userDocSnap.exists()) {
-      const userData = userDocSnap.data();
-      await updateDoc(userDocRef, { budget: Number(budget) });
-
-      setBudget(Number(budget));
-      Toast.show("Budget updated successfully", options);
-
-      // Send push notification (uncomment if pushToken is available)
-      // notifications.sendPushNotification(
-      //   pushToken,
-      //   "Budget Changed",
-      //   `Your budget has been updated to ₹${budget}`
-      // );
-
-      const notifications = userData.notifications || [];
-      notifications.push({
-        id: uuidv4(),
-        type: "Budget Changed",
-        message: `Your budget has been updated to ₹${budget}.`,
-        timestamp: new Date(),
-        read: false
-      });
-
-      await updateDoc(userDocRef, { notifications });
-
-      router.back();
-    } else {
-      Toast.show("User document does not exist", options);
-      router.back();
-    }
-  } catch (error) {
-    console.error(error);
-    Toast.show("Failed to set Budget", options);
-  } finally {
-    setBudgetLoading(false);
-  }
-};
+  };
 
 
   const handleLogout = async () => {

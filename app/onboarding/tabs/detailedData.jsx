@@ -7,6 +7,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  ScrollView,
+  Dimensions,
 } from "react-native"
 import React, { useContext, useState, useEffect } from "react"
 import { useLocalSearchParams, useRouter } from "expo-router"
@@ -25,6 +27,8 @@ import { firestore } from "../../../firebase/firebaseConfig"
 import Toast from "react-native-root-toast"
 import Modal from "react-native-modal"
 import currencySymbols from "./../../../components/CurrencySymbols"
+
+const { height } = Dimensions.get("screen")
 
 const DetailedData = () => {
   const {
@@ -141,8 +145,7 @@ const DetailedData = () => {
   }, [userData])
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <ScrollView
       style={styles.container}
     >
       <SafeAreaView style={styles.container}>
@@ -169,7 +172,7 @@ const DetailedData = () => {
               <View style={styles.amountContainer}>
                 <Text style={styles.amountText}>
                   {currencySymbols[currencyType] || "₹"}
-                  {transaction?.amount || 0}
+                  {Math.ceil(transaction?.amount) || 0}
                 </Text>
               </View>
               <View style={styles.dateContainer}>
@@ -284,7 +287,7 @@ const DetailedData = () => {
           </View>
         </Modal>
       </SafeAreaView>
-    </KeyboardAvoidingView>
+    </ScrollView>
   )
 }
 
@@ -407,13 +410,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 20,
     textAlignVertical: "top",
+    borderWidth: 0.5,
+    paddingLeft: 10,
   },
   editContainer: {
     width: "100%",
     paddingVertical: 25,
     alignItems: "center",
-    position: "absolute",
-    bottom: 10,
+    height: height / 4.2,
+    position: "relative",
   },
   editContainerBox: {
     height: 50,
@@ -423,6 +428,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     elevation: 4,
     width: "90%",
+    position: "absolute",
+    bottom: 0,
   },
   buttonText: {
     fontFamily: "Poppins_500Medium",

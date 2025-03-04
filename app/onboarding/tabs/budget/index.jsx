@@ -70,8 +70,8 @@ const Budget = () => {
                 {userExpenses === null ||
                 userExpenses === undefined ||
                 userExpenses === 0
-                  ? budget
-                  : `${Math.max(0, budget - userExpenses)}`}
+                  ? Math.ceil(budget)
+                  : Math.ceil(Math.max(0, budget - Math.ceil(userExpenses)))}
               </Text>
 
               <View style={styles.progressBarContainer}>
@@ -87,13 +87,9 @@ const Budget = () => {
               </View>
               <Text style={styles.progressText}>
                 Spent: {currencySymbols[currencyType] || "₹"}
-                {userExpenses === null ||
-                userExpenses === undefined ||
-                userExpenses === 0
-                  ? 0
-                  : userExpenses}{" "}
-                out of {currencySymbols[currencyType] || "₹"}
-                {budget}
+                {userExpenses ? Math.ceil(userExpenses) : 0} out of{" "}
+                {currencySymbols[currencyType] || "₹"}
+                {Math.ceil(budget)}
               </Text>
             </View>
             <View style={styles.buttonContainer}>

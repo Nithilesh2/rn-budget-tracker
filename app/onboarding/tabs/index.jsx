@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native"
-import React, { useCallback, useContext, useState } from "react"
+import React, { useCallback, useContext } from "react"
 import NotificationIcon from "./../../../assets/icons/Bell"
 import {
   Poppins_500Medium,
@@ -111,8 +111,6 @@ const index = () => {
                   fill="#7F3DFF"
                 />
               </TouchableOpacity>
-
-              {/* Red Dot for Unread Notifications */}
               {unreadNotifications && <View style={styles.redDot} />}
             </View>
           </View>
@@ -130,7 +128,7 @@ const index = () => {
                   </TouchableOpacity>
                 </View>
               ) : (
-                `${currencySymbols[currencyType] || "₹"}${budget}`
+                `${currencySymbols[currencyType] || "₹"}${Math.ceil(budget)}`
               )}
             </Text>
           </View>
@@ -144,11 +142,7 @@ const index = () => {
                 <Text style={styles.boxRightText}>Income</Text>
                 <Text style={styles.boxRightAmount}>
                   {currencySymbols[currencyType] || "₹"}
-                  {userIncome === undefined ||
-                  userIncome === null ||
-                  userIncome === 0
-                    ? "0"
-                    : `${userIncome}`}
+                  {userExpenses ? Math.ceil(userIncome) : "0"}
                 </Text>
               </View>
             </View>
@@ -161,11 +155,7 @@ const index = () => {
                 <Text style={styles.boxRightText}>Expenses</Text>
                 <Text style={styles.boxRightAmount}>
                   {currencySymbols[currencyType] || "₹"}
-                  {userExpenses === undefined ||
-                  userExpenses === null ||
-                  userExpenses === 0
-                    ? "0"
-                    : userExpenses}
+                  {userExpenses ? Math.ceil(userExpenses) : "0"}
                 </Text>
               </View>
             </View>
@@ -263,12 +253,12 @@ const index = () => {
                             ]}
                           >
                             {transaction.method === "Expense"
-                              ? `- ${currencySymbols[currencyType] || "₹"}${
-                                  transaction.amount
-                                }`
-                              : `+ ${currencySymbols[currencyType] || "₹"}${
-                                  transaction.amount
-                                }`}
+                              ? `- ${
+                                  currencySymbols[currencyType] || "₹"
+                                }${Math.ceil(transaction.amount)}`
+                              : `+ ${
+                                  currencySymbols[currencyType] || "₹"
+                                }${Math.ceil(transaction.amount)}`}
                           </Text>
                           <Text style={styles.recentTransactionsItemTime}>
                             {transaction.timestamp?.seconds
