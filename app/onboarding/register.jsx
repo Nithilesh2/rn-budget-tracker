@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native"
-import React, { useContext, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import EyeCloseIcon from "./../../assets/icons/EyeClose"
 import EyeOpenIcon from "./../../assets/icons/EyeOpen"
 import { useRouter } from "expo-router"
@@ -19,10 +19,19 @@ import {
 } from "@expo-google-fonts/poppins"
 import { auth, firestore } from "../../firebase/firebaseConfig"
 import Toast from "react-native-root-toast"
-import { createUserWithEmailAndPassword } from "firebase/auth"
+import { createUserWithEmailAndPassword, signInWithCredential, GoogleAuthProvider } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { AppContext } from "../../context/AppContext"
 import notifications from "../utils/notifications"
+import * as WebBrowser from "expo-web-browser"
+import * as Google from "expo-auth-session/providers/google"
+
+const webClientId =
+  "1016129494237-4g3evibboq1dg6vh1aee440deibm0jp9.apps.googleusercontent.com"
+const androidClientId =
+  "1016129494237-cv0ngor6vjimhht01hpahmjmd4398b8u.apps.googleusercontent.com"
+
+WebBrowser.maybeCompleteAuthSession()
 
 const Register = () => {
   const { options, pushToken } = useContext(AppContext)
@@ -38,6 +47,55 @@ const Register = () => {
     Poppins_500Medium,
     Poppins_600SemiBold,
   })
+
+  const config = {
+    webClientId,
+    androidClientId,
+  }
+
+  const [request, response, promptAsync] = Google.useAuthRequest(config)
+
+  const tokenHandler = async () => {
+    if (response?.type === "success") {
+      const { authentication } = response
+      const { accessToken } = authentication
+
+      try {
+        const credential = GoogleAuthProvider.credential(null, accessToken)
+        const userCredential = await signInWithCredential(auth, credential)
+        const user = userCredential.user
+
+        await setDoc(doc(firestore, "users", user.uid), {
+          name: user.displayName,
+          email: user.email,
+          uid: user.uid,
+          userIconNumber: Math.floor(Math.random() * 10),
+          security: {
+            faceid: { enabled: false },
+            fingerprint: { enabled: false },
+            pin: { enabled: false, value: null },
+          },
+          isNewUser: true,
+          currency: "INR",
+        })
+
+        Toast.show("User registered successfully", options)
+        router.push("/onboarding/login")
+        // notifications.sendPushNotification(
+        //   pushToken,
+        //   "Welcome to Budget Tracker! 🎉",
+        //   `Hi ${user.displayName}, your account has been created successfully.`
+        // )
+      } catch (error) {
+        Toast.show("Error signing in with Google", options)
+        console.error(error)
+      }
+    }
+  }
+
+  useEffect(() => {
+    tokenHandler()
+  }, [response])
 
   if (!fontsLoaded) {
     return (
@@ -83,7 +141,7 @@ const Register = () => {
               pin: { enabled: false, value: null },
             },
             isNewUser: true,
-            currency: 'INR'
+            currency: "INR",
           })
           Toast.show("User registered successfully", options)
           router.push("/onboarding/login")
@@ -156,7 +214,11 @@ const Register = () => {
             <Text style={styles.orText}>Or With</Text>
           </View>
           <View style={styles.socialContainer}>
-            <TouchableOpacity activeOpacity={0.9} style={styles.socialButton}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles.socialButton}
+              onPress={() => promptAsync()}
+            >
               <Image
                 source={require("./../../assets/images/google.png")}
                 style={styles.googleImage}
