@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  Linking
 } from "react-native"
 import React, { useContext, useState } from "react"
 import { useRouter } from "expo-router"
@@ -40,6 +41,10 @@ const index = () => {
       </View>
     )
   }
+
+  const openPortfolio = () => {
+    Linking.openURL("https://nithilesh.vercel.app/");
+  };
 
   return (
     <>
@@ -113,6 +118,10 @@ const index = () => {
             <Text style={styles.versionText}>Version 1.0.0</Text>
             <Text style={styles.versionText}>Budget Tracker</Text>
           </View>
+          <TouchableOpacity style={styles.websiteContainer} activeOpacity={0.9} onPress={openPortfolio}>
+            <Text style={styles.websiteText}>Visit My Portfolio</Text>
+            <Text style={styles.websiteText2}>&lt;here&gt;</Text>
+          </TouchableOpacity>
         </ScrollView>
 
         {showLogout && (
@@ -330,8 +339,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginVertical: 10,
     gap: 15,
-    position: 'absolute',
-    bottom: 20,
+    position: "absolute",
+    bottom: 50,
     width: "100%",
     alignSelf: "center",
   },
@@ -341,4 +350,23 @@ const styles = StyleSheet.create({
     color: "grey",
     marginBottom: 5,
   },
+  websiteContainer: {
+    position: "absolute",
+    bottom: 35,
+    width: "100%",
+    flexDirection: 'row',
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  websiteText: {
+    fontFamily: "Poppins_400Regular",
+    fontSize: 15,
+    color: "grey",
+  },
+  websiteText2: {
+    fontFamily: "Poppins_400Regular",
+    fontSize: 15,
+    color: "#7F3DFF",
+    marginLeft: 5,
+  }
 })

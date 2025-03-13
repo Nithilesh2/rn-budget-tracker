@@ -16,7 +16,7 @@ const index = () => {
   useEffect(() => {
     if (fontsLoaded) {
       setTimeout(() => {
-        router.push("onboarding/")
+        router.push("onboarding/welcome1")
       }, 3000)
     }
   }, [fontsLoaded, router])
