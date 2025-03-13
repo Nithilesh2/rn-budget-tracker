@@ -35,7 +35,7 @@ const welcome2 = () => {
             <TouchableOpacity
               activeOpacity={0.9}
               style={styles.backBtn}
-              onPress={() => router.push("onboarding/welcome1")}
+              onPress={() => router.push("onboarding/")}
             >
               <Text style={styles.nextText}>Back</Text>
             </TouchableOpacity>
